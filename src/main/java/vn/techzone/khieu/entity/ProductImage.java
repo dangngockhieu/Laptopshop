@@ -21,7 +21,7 @@ public class ProductImage {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
     @NotEmpty(message = "URL Image cannot be empty")
     private String url;
