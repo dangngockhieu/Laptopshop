@@ -1,4 +1,4 @@
-package vn.techzone.khieu.service.error;
+package vn.techzone.khieu.utils.error;
 
 public class NotFoundUserException extends RuntimeException {
 

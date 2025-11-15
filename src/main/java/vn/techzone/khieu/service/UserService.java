@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 import vn.techzone.khieu.dto.request.user.CreateUserDTO;
 import vn.techzone.khieu.entity.User;
 import vn.techzone.khieu.repository.UserRepository;
-import vn.techzone.khieu.service.error.NotFoundUserException;
+import vn.techzone.khieu.utils.error.NotFoundUserException;
 
 @Service
 @RequiredArgsConstructor

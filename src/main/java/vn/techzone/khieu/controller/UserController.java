@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import vn.techzone.khieu.dto.request.user.CreateUserDTO;
 import vn.techzone.khieu.entity.User;
@@ -37,7 +38,7 @@ public class UserController {
     }
 
     @PostMapping()
-    public ResponseEntity<User> createUser(@RequestBody CreateUserDTO userDTO) {
+    public ResponseEntity<User> createUser(@Valid @RequestBody CreateUserDTO userDTO) {
         User user = this.userService.handleCreateUser(userDTO);
         String hashPassword = passwordEncoder.encode(userDTO.getPassword());
         user.setPassword(hashPassword);
