@@ -9,6 +9,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class KhieuApplication {
 
 	public static void main(String[] args) {
+		EnvLoader.loadEnv();
 		TimeZone.setDefault(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
 		SpringApplication.run(KhieuApplication.class, args);
 	}
