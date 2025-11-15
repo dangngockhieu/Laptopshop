@@ -1,6 +1,8 @@
 package vn.techzone.khieu.entity;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -10,6 +12,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.Getter;
@@ -33,7 +36,13 @@ public class Review {
     @Column(columnDefinition = "TEXT")
     private String comment;
 
-    private LocalDateTime createdAt;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+7")
+    private Instant createdAt;
+
+    @PrePersist
+    public void handleBeforeCreate() {
+        this.createdAt = Instant.now();
+    }
 
     @ManyToOne
     @JoinColumn(name = "userID")

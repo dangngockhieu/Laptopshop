@@ -1,7 +1,9 @@
 package vn.techzone.khieu.entity;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -12,6 +14,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.Getter;
@@ -43,15 +46,24 @@ public class Order {
 
     private String status;
 
-    private LocalDateTime orderDate;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+7")
+    private Instant orderDate;
+
+    @PrePersist
+    public void handleBeforeCreate() {
+        this.orderDate = Instant.now();
+    }
 
     private String trackingCode;
 
-    private LocalDateTime deliveryDate;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+7")
+    private Instant deliveryDate;
 
-    private LocalDateTime expectedDate;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+7")
+    private Instant expectedDate;
 
-    private LocalDateTime receivedDate;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+7")
+    private Instant receivedDate;
 
     @ManyToOne
     @JoinColumn(name = "userID")

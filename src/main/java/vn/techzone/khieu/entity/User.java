@@ -1,7 +1,9 @@
 package vn.techzone.khieu.entity;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -47,11 +49,13 @@ public class User {
 
     private String refreshToken;
 
-    private LocalDateTime sentAt;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+7")
+    private Instant sentAt;
 
     private String verificationCode;
 
-    private LocalDateTime codeExpired;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+7")
+    private Instant codeExpired;
 
     @OneToMany(mappedBy = "user")
     private List<Cart> carts;
