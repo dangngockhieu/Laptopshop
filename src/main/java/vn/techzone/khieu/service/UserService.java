@@ -3,7 +3,6 @@ package vn.techzone.khieu.service;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -16,15 +15,13 @@ import vn.techzone.khieu.service.error.NotFoundUserException;
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
 
     public boolean isEmailExist(String email) {
         return this.userRepository.existsByEmail(email);
     }
 
-    public User findUserByEmail(String email) {
-        return this.userRepository.findByEmail(email)
-                .orElseThrow(() -> new NotFoundUserException("Không tìm thấy User với email: " + email));
+    public Optional<User> findUserByEmail(String email) {
+        return this.userRepository.findByEmail(email);
     }
 
     public List<User> getAllUsers() {
@@ -40,8 +37,7 @@ public class UserService {
         User user = new User();
         user.setName(userDTO.getName());
         user.setEmail(userDTO.getEmail());
-        String hashPassword = passwordEncoder.encode(userDTO.getPassword());
-        user.setPassword(hashPassword);
+        user.setPassword(userDTO.getPassword());
         user.setRole(userDTO.getRole());
         user.setVerified(true);
 
