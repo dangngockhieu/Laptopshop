@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 
 import jakarta.servlet.http.HttpServletResponse;
+import vn.techzone.khieu.utils.annotation.ApiMessage;
 
 @ControllerAdvice
 public class FormatResponse implements ResponseBodyAdvice<Object> {
@@ -40,8 +41,13 @@ public class FormatResponse implements ResponseBodyAdvice<Object> {
         if (status >= 400) {
             return body;
         } else {
-            res.setMessage("Success");
             res.setData(body);
+            ApiMessage apiMessage = returnType.getMethodAnnotation(ApiMessage.class);
+            if (apiMessage != null) {
+                res.setMessage(apiMessage.value());
+            } else {
+                res.setMessage("Success");
+            }
         }
 
         return res;
