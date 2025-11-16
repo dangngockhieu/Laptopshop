@@ -26,6 +26,15 @@ public class GlobalException {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(res);
     }
 
+    @ExceptionHandler(value = UnauthorizedException.class)
+    public ResponseEntity<RestResponse<Object>> handleUnauthorizedException(UnauthorizedException ex) {
+        RestResponse<Object> res = new RestResponse<>();
+        res.setStatusCode(HttpStatus.UNAUTHORIZED.value());
+        res.setError(ex.getMessage());
+        res.setMessage("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại");
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(res);
+    }
+
     @ExceptionHandler(value = {
             UsernameNotFoundException.class,
             BadCredentialsException.class

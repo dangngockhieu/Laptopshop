@@ -13,6 +13,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByEmail(String email);
 
+    Optional<User> findByEmailAndRefreshToken(String email, String refreshToken);
+
     boolean existsByEmail(String email);
 
     @Query("SELECT u FROM User u WHERE u.verified = true " +

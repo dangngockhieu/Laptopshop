@@ -8,6 +8,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -24,6 +26,7 @@ import vn.techzone.khieu.service.user.UserPrincipal;
 import vn.techzone.khieu.utils.SecurityUtil;
 import vn.techzone.khieu.utils.annotation.ApiMessage;
 import vn.techzone.khieu.utils.error.NotFoundUserException;
+import vn.techzone.khieu.utils.error.UnauthorizedException;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -57,11 +60,14 @@ public class AuthController {
                                 principal.getRole());
                 ResLoginDTO res = new ResLoginDTO();
                 res.setUser(userInfo);
-                String access_token = this.securityUtil.createAccessToken(authentication, res.getUser());
-                res.setAccess_token(access_token);
-                String refresh_token = this.securityUtil.createRefreshToken(loginDTO.getEmail(), res);
-                this.userService.updateUserToken(loginDTO.getEmail(), refresh_token);
-                ResponseCookie refreshTokenCookie = ResponseCookie.from("refresh_token", refresh_token)
+
+                String accessToken = this.securityUtil.createAccessToken(loginDTO.getEmail(), res.getUser());
+                res.setAccessToken(accessToken);
+
+                String refreshToken = this.securityUtil.createRefreshToken(loginDTO.getEmail(), res);
+                this.userService.updateUserToken(loginDTO.getEmail(), refreshToken);
+
+                ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", refreshToken)
                                 .httpOnly(true)
                                 // .secure(true)
                                 .path("/")
@@ -76,7 +82,7 @@ public class AuthController {
         @GetMapping("/account")
         @ApiMessage("Thông tin tài khoản")
         public ResponseEntity<ResLoginDTO.UserInfo> getAccount() {
-                String email = SecurityUtil.getCurrentUserLogin().orElse("");
+                String email = SecurityUtil.getCurrentUserLogin().orElse(null);
                 User user = this.userService.findUserByEmail(email)
                                 .orElseThrow(() -> new NotFoundUserException(
                                                 "Không tìm thấy User với email: " + email));
@@ -89,4 +95,66 @@ public class AuthController {
 
                 return ResponseEntity.ok(userInfo);
         }
+
+        @GetMapping("/refresh")
+        @ApiMessage("Refresh token")
+        public ResponseEntity<ResLoginDTO> refreshToken(
+                        @CookieValue(name = "refreshToken", required = false) String refreshToken) {
+                if (refreshToken == null || refreshToken.isEmpty())
+                        throw new UnauthorizedException("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại");
+
+                Jwt decodedToken = this.securityUtil.checkValidToken(refreshToken);
+                String email = decodedToken.getSubject();
+
+                User currentUser = this.userService.findByEmailAndRefreshToken(email, refreshToken)
+                                .orElseThrow(() -> new UnauthorizedException(
+                                                "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại"));
+
+                ResLoginDTO.UserInfo userInfo = new ResLoginDTO.UserInfo(
+                                currentUser.getId(),
+                                currentUser.getName(),
+                                currentUser.getEmail(),
+                                currentUser.getRole());
+                ResLoginDTO res = new ResLoginDTO();
+                res.setUser(userInfo);
+
+                String accessToken = this.securityUtil.createAccessToken(email, res.getUser());
+                res.setAccessToken(accessToken);
+
+                String newRefreshToken = this.securityUtil.createRefreshToken(email, res);
+                this.userService.updateUserToken(email, newRefreshToken);
+
+                ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", newRefreshToken)
+                                .httpOnly(true)
+                                // .secure(true)
+                                .path("/")
+                                .maxAge(refreshTokenExpired)
+                                .sameSite("Strict")
+                                .build();
+
+                return ResponseEntity.ok()
+                                .header(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString())
+                                .body(res);
+        }
+
+        @PostMapping("/logout")
+        @ApiMessage("Logout")
+        public ResponseEntity<Void> handleLogout() {
+                String email = SecurityUtil.getCurrentUserLogin().orElse(null);
+                if (email != null) {
+                        this.userService.updateUserToken(email, null);
+                }
+                ResponseCookie deleteCookie = ResponseCookie.from("refreshToken", "")
+                                .httpOnly(true)
+                                // .secure(true)
+                                .path("/")
+                                .maxAge(0)
+                                .build();
+
+                return ResponseEntity.ok()
+                                .header(HttpHeaders.SET_COOKIE, deleteCookie.toString())
+                                .build();
+
+        }
+
 }

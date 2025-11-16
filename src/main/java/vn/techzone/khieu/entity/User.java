@@ -48,7 +48,7 @@ public class User {
     private Boolean verified = false;
 
     @Column(columnDefinition = "TEXT")
-    private String refresh_token;
+    private String refreshToken;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+7")
     private Instant sentAt;
