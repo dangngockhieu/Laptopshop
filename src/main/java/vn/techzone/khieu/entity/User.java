@@ -47,11 +47,13 @@ public class User {
     @Column(name = "verified")
     private Boolean verified = false;
 
-    private String refreshToken;
+    @Column(columnDefinition = "TEXT")
+    private String refresh_token;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+7")
     private Instant sentAt;
 
+    @Column(columnDefinition = "CHAR(36)")
     private String verificationCode;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+7")
