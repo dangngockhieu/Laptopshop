@@ -1,11 +1,9 @@
 package vn.techzone.khieu.service;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -41,24 +39,16 @@ public class EmailService {
         }
     }
 
-    public void sendEmailFromTemplate(String to, String subject, String templateName) {
+    public void sendEmailFromTemplate(String to, String subject,
+            String templateName,
+            Map<String, Object> variables) {
+
         Context context = new Context();
-        String content = templateEngine.process(templateName, context);
-        sendEmail(to, subject, content, false, true);
+        context.setVariables(variables);
+
+        String html = templateEngine.process(templateName, context);
+
+        sendEmail(to, subject, html, false, true);
     }
 
-    public String loadTemplate(String fileName, Map<String, String> variables) {
-        try {
-            ClassPathResource resource = new ClassPathResource("templates/" + fileName);
-            String html = new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
-
-            for (Map.Entry<String, String> entry : variables.entrySet()) {
-                html = html.replace("{{" + entry.getKey() + "}}", entry.getValue());
-            }
-
-            return html;
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to load email template", e);
-        }
-    }
 }

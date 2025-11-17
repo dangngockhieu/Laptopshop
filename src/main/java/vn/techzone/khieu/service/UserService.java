@@ -57,7 +57,7 @@ public class UserService {
     public ResUserDTO handleCreateUserForAdmin(CreateUserDTO userDTO) {
         String hashPassword = passwordEncoder.encode(userDTO.getPassword());
         userDTO.setPassword(hashPassword);
-        User user = userMapper.toUser(userDTO);
+        User user = userMapper.toCreateUser(userDTO);
         user.setVerified(true);
         User savedUser = this.userRepository.save(user);
         return this.userMapper.toResUserDTO(savedUser);
@@ -95,7 +95,7 @@ public class UserService {
     }
 
     public long countUsers() {
-        return this.userRepository.countByIsVerifiedTrue();
+        return this.userRepository.countByVerifiedTrue();
     }
 
 }

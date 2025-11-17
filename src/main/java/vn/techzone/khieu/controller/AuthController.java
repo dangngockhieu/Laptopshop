@@ -25,9 +25,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import vn.techzone.khieu.dto.request.user.CreateUserDTO;
 import vn.techzone.khieu.dto.request.user.EmailDTO;
 import vn.techzone.khieu.dto.request.user.LoginDTO;
+import vn.techzone.khieu.dto.request.user.RegisterUserDTO;
 import vn.techzone.khieu.dto.request.user.ResetPasswordDTO;
 import vn.techzone.khieu.dto.response.user.ResLoginDTO;
 import vn.techzone.khieu.entity.User;
@@ -171,7 +171,7 @@ public class AuthController {
 
         @PostMapping("/register")
         @ApiMessage("Đăng ký")
-        public ResponseEntity<String> register(@Valid @RequestBody CreateUserDTO registerDTO) {
+        public ResponseEntity<String> register(@Valid @RequestBody RegisterUserDTO registerDTO) {
                 this.authService.handleRegister(registerDTO);
                 return ResponseEntity
                                 .ok("Đăng ký thành công! Vui lòng kiểm tra email để xác minh tài khoản trong 30 phút.");
