@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Đặt lại mật khẩu</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f4f6f8;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .header {
+            padding: 20px;
+            text-align: center;
+            background: linear-gradient(90deg, #1e90ff, #3fb0ff);
+            color: #fff;
+        }
+
+        .preheader {
+            display: none !important;
+            visibility: hidden;
+            opacity: 0;
+            height: 0;
+            width: 0;
+        }
+
+        .content {
+            padding: 28px;
+            color: #333333;
+            line-height: 1.5;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: #1e90ff;
+            color: #ffffff;
+        }
+
+        .note {
+            font-size: 13px;
+            color: #666666;
+            margin-top: 18px;
+        }
+
+        .footer {
+            padding: 18px;
+            font-size: 13px;
+            color: #999999;
+            text-align: center;
+        }
+
+        @media (max-width:420px) {
+            .content {
+                padding: 18px;
+            }
+
+            .header {
+                padding: 14px
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Preheader (hiện tóm tắt trong inbox) -->
+    <div class="preheader">Đặt lại mật khẩu cho tài khoản của bạn.</div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+        style="background:#f4f6f8; padding:28px 12px;">
+        <tr>
+            <td align="center">
+                <table role="presentation" class="container" width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                        <td class="header">
+                            <h1 style="margin:0; font-size:20px;">Đặt lại mật khẩu</h1>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="content">
+                            <p style="margin:0 0 12px 0;">Chào <strong>${name}</strong>,</p>
+                            <p style="margin:0 0 18px 0;">
+                                Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn trên
+                                <strong>TechZone</strong>. Vui lòng nhập mã dưới để đặt lại mật khẩu:
+                            </p>
+                            <h2
+                                style="font-size: 20px; font-weight: 700; line-height: 1.25; margin-top: 0; margin-bottom: 15px; text-align: center;">
+                                ${codeID}</h2>
+                            <p class="note">
+                                Lưu ý: Mã này có hiệu lực trong <strong>30 phút</strong> kể từ khi gửi. Nếu bạn không
+                                yêu
+                                cầu đặt lại mật khẩu, vui lòng bỏ qua email này — không có hành động nào khác cần thiết.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+
+</html>
