@@ -59,10 +59,6 @@ public class AuthService {
             throw new BadCredentialsException("Token missing");
         User user = this.userRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundUserException("Không tìm thấy User với email: " + email));
-        System.out.println("Token URL: " + token);
-        System.out.println("Token DB: " + user.getVerificationCode());
-        System.out.println(token.length());
-        System.out.println(user.getVerificationCode().length());
         if (!token.equals(user.getVerificationCode())) {
             throw new IllegalArgumentException("Token không hợp lệ");
         }
@@ -152,6 +148,7 @@ public class AuthService {
 
         Map<String, Object> variables = new HashMap<>();
         variables.put("name", user.getName());
+        variables.put("codeID", token);
 
         emailService.sendEmailFromTemplate(
                 user.getEmail(),

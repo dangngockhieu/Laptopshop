@@ -13,6 +13,7 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -28,7 +29,7 @@ public class Payment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotEmpty(message = "Amount cannot be empty")
+    @NotNull(message = "Amount cannot be empty")
     private Integer amount;
 
     @NotEmpty(message = "Method cannot be empty")
@@ -36,7 +37,7 @@ public class Payment {
 
     private String status;
 
-    private String transactionID;
+    private String transactionId;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+7")
     private Instant createdAt;
@@ -47,6 +48,6 @@ public class Payment {
     }
 
     @OneToOne
-    @JoinColumn(name = "orderID")
+    @JoinColumn(name = "order_id")
     private Order order;
 }

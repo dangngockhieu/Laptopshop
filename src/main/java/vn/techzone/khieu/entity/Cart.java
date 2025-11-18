@@ -7,13 +7,13 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "carts", indexes = @Index(name = "idx_carts_userID", columnList = "userID"))
+@Table(name = "carts", indexes = @Index(name = "idx_carts_user_id", columnList = "user_id"))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -22,18 +22,18 @@ public class Cart {
     @EmbeddedId
     private CartId id;
 
-    @NotEmpty(message = "Number Product in Cart cannot be empty")
+    @NotNull(message = "Number Product in Cart cannot be empty")
     private Integer number;
 
-    private Boolean isSelected = false;
+    private Boolean selected = false;
 
     @ManyToOne
-    @MapsId("userID")
-    @JoinColumn(name = "userID")
+    @MapsId("userId")
+    @JoinColumn(name = "user_id")
     private User user;
 
     @ManyToOne
-    @MapsId("productID")
-    @JoinColumn(name = "productID")
+    @MapsId("productId")
+    @JoinColumn(name = "product_id")
     private Product product;
 }

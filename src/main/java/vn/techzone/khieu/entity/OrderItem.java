@@ -7,7 +7,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -23,19 +23,19 @@ public class OrderItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotEmpty(message = "Quantity cannot be empty")
+    @NotNull(message = "Quantity cannot be empty")
     private Integer quantity;
 
-    @NotEmpty(message = "Price cannot be empty")
+    @NotNull(message = "Price cannot be empty")
     private Integer price;
 
-    private Boolean isReviewed = false;
+    private Boolean reviewed = false;
 
     @ManyToOne
-    @JoinColumn(name = "orderID")
+    @JoinColumn(name = "order_id")
     private Order order;
 
     @ManyToOne
-    @JoinColumn(name = "productID")
+    @JoinColumn(name = "product_id")
     private Product product;
 }

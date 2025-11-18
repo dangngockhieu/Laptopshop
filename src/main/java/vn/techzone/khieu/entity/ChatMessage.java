@@ -9,6 +9,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.Getter;
@@ -34,10 +35,15 @@ public class ChatMessage {
 
     private Instant createdAt;
 
+    @PrePersist
+    public void handleBeforeCreate() {
+        this.createdAt = Instant.now();
+    }
+
     @Column(columnDefinition = "json")
     private String productData;
 
     @ManyToOne
-    @JoinColumn(name = "userID")
+    @JoinColumn(name = "user_id")
     private User user;
 }

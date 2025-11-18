@@ -14,8 +14,8 @@ import lombok.Setter;
 @NoArgsConstructor
 public class ProductFeatureId implements Serializable {
 
-    private Long productID;
-    private Long featureID;
+    private Long productId;
+    private Long featureId;
 
     @Override
     public boolean equals(Object o) {
@@ -24,12 +24,12 @@ public class ProductFeatureId implements Serializable {
         if (o == null || getClass() != o.getClass())
             return false;
         ProductFeatureId that = (ProductFeatureId) o;
-        return Objects.equals(productID, that.productID) &&
-                Objects.equals(featureID, that.featureID);
+        return Objects.equals(productId, that.productId) &&
+                Objects.equals(featureId, that.featureId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(productID, featureID);
+        return Objects.hash(productId, featureId);
     }
 }
