@@ -11,6 +11,8 @@ import vn.techzone.khieu.dto.response.product.ResCardProductDTO;
 import vn.techzone.khieu.entity.Product;
 
 public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
+    boolean existsByIdAndQuantityGreaterThan(Long id, Integer quantity);
+
     @Query(value = """
                 SELECT p.id, p.name,
                     p.original_price AS "originalPrice",
