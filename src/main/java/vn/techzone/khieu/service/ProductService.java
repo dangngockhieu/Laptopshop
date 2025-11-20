@@ -15,6 +15,7 @@ import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import vn.techzone.khieu.dto.request.product.CreateProductDTO;
 import vn.techzone.khieu.dto.request.product.FilterProductDTO;
+import vn.techzone.khieu.dto.request.product.UpdateProductDTO;
 import vn.techzone.khieu.dto.response.PageResponseDTO;
 import vn.techzone.khieu.dto.response.product.ResProductDTO;
 import vn.techzone.khieu.dto.response.product.ResCardProductDTO;
@@ -59,6 +60,54 @@ public class ProductService {
     public List<ResCardProductDTO> getTopProducts(String category) {
         List<ResCardProductDTO> products = productRepository.findAllProducts(category);
         return products;
+    }
+
+    public ResProductDTO updateProduct(Long id, UpdateProductDTO updateProductDTO) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
+
+        if (updateProductDTO.getName() != null)
+            product.setName(updateProductDTO.getName());
+        if (updateProductDTO.getOriginalPrice() != null)
+            product.setOriginalPrice(updateProductDTO.getOriginalPrice());
+        if (updateProductDTO.getCoupon() != null)
+            product.setCoupon(updateProductDTO.getCoupon());
+        if ((updateProductDTO.getOriginalPrice() != null
+                && !updateProductDTO.getOriginalPrice().equals(product.getOriginalPrice())) ||
+                (updateProductDTO.getCoupon() != null && !updateProductDTO.getCoupon().equals(product.getCoupon()))) {
+            int price = (int) Math
+                    .round(product.getOriginalPrice() - (product.getOriginalPrice() * product.getCoupon() / 100.0));
+            product.setPrice(price);
+        }
+        if (updateProductDTO.getQuantity() != null)
+            product.setQuantity(updateProductDTO.getQuantity());
+        if (updateProductDTO.getWarranty() != null)
+            product.setWarranty(updateProductDTO.getWarranty());
+        if (updateProductDTO.getInfor() != null)
+            product.setInfor(updateProductDTO.getInfor());
+        if (updateProductDTO.getCpu() != null)
+            product.setCpu(updateProductDTO.getCpu());
+        if (updateProductDTO.getRam() != null)
+            product.setRam(updateProductDTO.getRam());
+        if (updateProductDTO.getStorage() != null)
+            product.setStorage(updateProductDTO.getStorage());
+        if (updateProductDTO.getScreen() != null)
+            product.setScreen(updateProductDTO.getScreen());
+        if (updateProductDTO.getGraphicsCard() != null)
+            product.setGraphicsCard(updateProductDTO.getGraphicsCard());
+        if (updateProductDTO.getBattery() != null)
+            product.setBattery(updateProductDTO.getBattery());
+        if (updateProductDTO.getWeight() != null)
+            product.setWeight(updateProductDTO.getWeight());
+        if (updateProductDTO.getReleaseYear() != null)
+            product.setReleaseYear(updateProductDTO.getReleaseYear());
+        if (updateProductDTO.getCategory() != null)
+            product.setCategory(updateProductDTO.getCategory());
+        if (updateProductDTO.getFactory() != null)
+            product.setFactory(updateProductDTO.getFactory());
+
+        Product updatedProduct = productRepository.save(product);
+        return productMapper.toResProductDTO(updatedProduct);
     }
 
     public List<ResCardProductDTO> filterProducts(FilterProductDTO filter) {

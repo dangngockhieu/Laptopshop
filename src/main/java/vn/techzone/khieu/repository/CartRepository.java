@@ -3,6 +3,7 @@ package vn.techzone.khieu.repository;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -15,10 +16,14 @@ public interface CartRepository extends JpaRepository<Cart, CartId> {
 
     Long countByIdUserId(Long userId);
 
+    @Modifying
+    @Query(value = "DELETE FROM carts WHERE user_id = :userId AND product_id IN (:productIds)", nativeQuery = true)
+    void deleteByUserIdAndProductIds(@Param("userId") Long userId, @Param("productIds") List<Long> productIds);
+
     @Query(value = """
             SELECT p.id, p.name, p.price, p.quantity,
                 p.original_price AS "originalPrice",
-                c.number, c.is_selected AS "isSelected",
+                c.number, c.selected AS "isSelected",
                 img.url AS "imageUrl"
             FROM products p
             INNER JOIN carts c ON p.id = c.product_id
