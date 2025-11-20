@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
@@ -30,6 +31,7 @@ import vn.techzone.khieu.dto.request.user.LoginDTO;
 import vn.techzone.khieu.dto.request.user.RegisterUserDTO;
 import vn.techzone.khieu.dto.request.user.ResetPasswordDTO;
 import vn.techzone.khieu.dto.response.user.ResLoginDTO;
+import vn.techzone.khieu.dto.response.user.ResStringDTO;
 import vn.techzone.khieu.entity.User;
 import vn.techzone.khieu.service.AuthService;
 import vn.techzone.khieu.service.UserService;
@@ -108,7 +110,7 @@ public class AuthController {
                 return ResponseEntity.ok(userInfo);
         }
 
-        @GetMapping("/refresh")
+        @PostMapping("/refresh-token")
         @ApiMessage("Refresh token")
         public ResponseEntity<ResLoginDTO> refreshToken(
                         @CookieValue(name = "refreshToken", required = false) String refreshToken) {
@@ -171,10 +173,11 @@ public class AuthController {
 
         @PostMapping("/register")
         @ApiMessage("Đăng ký")
-        public ResponseEntity<String> register(@Valid @RequestBody RegisterUserDTO registerDTO) {
+        public ResponseEntity<ResStringDTO> register(@Valid @RequestBody RegisterUserDTO registerDTO) {
                 this.authService.handleRegister(registerDTO);
-                return ResponseEntity
-                                .ok("Đăng ký thành công! Vui lòng kiểm tra email để xác minh tài khoản trong 30 phút.");
+                return ResponseEntity.status(HttpStatus.CREATED).body(
+                                new ResStringDTO(
+                                                "Đăng ký thành công! Vui lòng kiểm tra email để xác minh tài khoản trong 30 phút."));
         }
 
         @GetMapping("/verify")
@@ -194,22 +197,23 @@ public class AuthController {
 
         @PostMapping("/send-reset-password")
         @ApiMessage("Gửi email đặt lại mật khẩu")
-        public ResponseEntity<String> sendResetPasswordEmail(@RequestBody EmailDTO emailDTO) {
+        public ResponseEntity<ResStringDTO> sendResetPasswordEmail(@RequestBody EmailDTO emailDTO) {
                 this.authService.sendEmailResetPassword(emailDTO.getEmail());
-                return ResponseEntity.ok("Email đặt lại mật khẩu đã được gửi. Vui lòng kiểm tra hộp thư.");
+                return ResponseEntity
+                                .ok(new ResStringDTO("Email đặt lại mật khẩu đã được gửi. Vui lòng kiểm tra hộp thư."));
         }
 
         @PatchMapping("/reset-password")
         @ApiMessage("Đặt lại mật khẩu")
-        public ResponseEntity<String> resetPassword(@Valid @RequestBody ResetPasswordDTO resetPasswordDTO) {
+        public ResponseEntity<ResStringDTO> resetPassword(@Valid @RequestBody ResetPasswordDTO resetPasswordDTO) {
                 this.authService.resetPassword(resetPasswordDTO);
-                return ResponseEntity.ok("Mật khẩu đã được đặt lại thành công!");
+                return ResponseEntity.ok(new ResStringDTO("Mật khẩu đã được đặt lại thành công!"));
         }
 
         @PostMapping("/send-verification-email")
         @ApiMessage("Gửi email xác minh")
-        public ResponseEntity<String> sendVerificationEmail(@RequestBody EmailDTO emailDTO) {
+        public ResponseEntity<ResStringDTO> sendVerificationEmail(@RequestBody EmailDTO emailDTO) {
                 this.authService.reSendVerificationEmail(emailDTO.getEmail());
-                return ResponseEntity.ok("Email xác minh đã được gửi. Vui lòng kiểm tra hộp thư.");
+                return ResponseEntity.ok(new ResStringDTO("Email xác minh đã được gửi. Vui lòng kiểm tra hộp thư."));
         }
 }

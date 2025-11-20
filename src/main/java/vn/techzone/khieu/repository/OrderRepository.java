@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import vn.techzone.khieu.dto.response.order.ResMonthlyRevenueDTO;
 import vn.techzone.khieu.dto.response.order.ResOrderCountDTO;
@@ -17,6 +18,7 @@ import vn.techzone.khieu.dto.response.order.ResOrderUser.ResUserOrder;
 import vn.techzone.khieu.dto.response.order.ResRevenue.ResRevenue;
 import vn.techzone.khieu.entity.Order;
 
+@Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
     @Modifying

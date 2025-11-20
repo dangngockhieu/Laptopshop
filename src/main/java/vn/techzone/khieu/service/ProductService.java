@@ -1,5 +1,8 @@
 package vn.techzone.khieu.service;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,19 +13,34 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import vn.techzone.khieu.dto.request.product.CreateProductDTO;
 import vn.techzone.khieu.dto.request.product.FilterProductDTO;
 import vn.techzone.khieu.dto.request.product.UpdateProductDTO;
+import vn.techzone.khieu.dto.request.review.CreateReviewDTO;
 import vn.techzone.khieu.dto.response.PageResponseDTO;
 import vn.techzone.khieu.dto.response.product.ResProductDTO;
+import vn.techzone.khieu.dto.response.product.ProductDetailDTO.ResProductDetail;
+import vn.techzone.khieu.dto.response.product.ProductDetailDTO.ResProductDetailDTO;
+import vn.techzone.khieu.dto.response.product.ProductDetailDTO.ResReview;
+import vn.techzone.khieu.dto.response.product.ProductDetailDTO.ResReviewSummary;
+import vn.techzone.khieu.dto.response.product.FilterProductResponseDTO;
 import vn.techzone.khieu.dto.response.product.ResCardProductDTO;
 import vn.techzone.khieu.entity.Product;
+import vn.techzone.khieu.entity.ProductImage;
+import vn.techzone.khieu.entity.Review;
 import vn.techzone.khieu.mapper.ProductMapper;
+import vn.techzone.khieu.repository.OrderItemRepository;
+import vn.techzone.khieu.repository.ProductImageRepository;
 import vn.techzone.khieu.repository.ProductRepository;
+import vn.techzone.khieu.repository.ReviewRepository;
+import vn.techzone.khieu.repository.UserRepository;
 import vn.techzone.khieu.utils.GenericSpecification;
+import vn.techzone.khieu.utils.error.StorageException;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -30,10 +48,47 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
     private final EntityManager entityManager;
+    private final FileService fileService;
+    private final ReviewRepository reviewRepository;
+    private final ProductImageRepository productImageRepository;
+    private final OrderItemRepository orderItemRepository;
+    private final UserRepository userRepository;
+    private static final String PRODUCT_FOLDER = "products";
 
-    public Product createProduct(CreateProductDTO createProductDTO) {
-        Product product = productMapper.toCreateProduct(createProductDTO);
-        return this.productRepository.save(product);
+    @Transactional
+    public Product createProduct(CreateProductDTO dto, List<MultipartFile> images)
+            throws URISyntaxException, IOException, StorageException {
+
+        Product product = productMapper.toCreateProduct(dto);
+        this.productRepository.save(product);
+
+        List<String> uploadedUrls = new ArrayList<>();
+        try {
+            if (images != null && !images.isEmpty()) {
+                fileService.createDirectory(PRODUCT_FOLDER);
+                for (MultipartFile image : images) {
+                    String uploadedFileName = fileService.store(image, PRODUCT_FOLDER);
+                    String url = "/storage/" + PRODUCT_FOLDER + "/" + uploadedFileName;
+                    uploadedUrls.add(url);
+
+                    ProductImage productImage = new ProductImage();
+                    productImage.setUrl(url);
+                    productImage.setProduct(product);
+                    productImageRepository.save(productImage);
+                }
+            }
+        } catch (Exception e) {
+            uploadedUrls.forEach(url -> {
+                try {
+                    fileService.delete(PRODUCT_FOLDER, url.substring(url.lastIndexOf("/") + 1));
+                } catch (StorageException | URISyntaxException e1) {
+                    e1.printStackTrace();
+                }
+            });
+            throw e;
+        }
+
+        return product;
     }
 
     public PageResponseDTO<ResProductDTO> getAllProducts(Pageable pageable, String keyword) {
@@ -41,7 +96,6 @@ public class ProductService {
 
         if (keyword != null && !keyword.isBlank()) {
             Specification<Product> nameSpec = GenericSpecification.like("name", keyword);
-
             spec = spec == null ? nameSpec : spec.and(nameSpec);
         }
         Page<Product> productPage = productRepository.findAll(spec, pageable);
@@ -57,9 +111,12 @@ public class ProductService {
                 productPage.getSize());
     }
 
-    public List<ResCardProductDTO> getTopProducts(String category) {
-        List<ResCardProductDTO> products = productRepository.findAllProducts(category);
-        return products;
+    public List<ResCardProductDTO> getTopProductsCategory(String category) {
+        return productRepository.findAllProductsCategory(category);
+    }
+
+    public List<ResCardProductDTO> getTopProducts() {
+        return productRepository.findAllProducts();
     }
 
     public ResProductDTO updateProduct(Long id, UpdateProductDTO updateProductDTO) {
@@ -110,47 +167,88 @@ public class ProductService {
         return productMapper.toResProductDTO(updatedProduct);
     }
 
-    public List<ResCardProductDTO> filterProducts(FilterProductDTO filter) {
+    public ResProductDetailDTO getProductById(Long id) {
+        ResProductDetail product = productRepository.findProductById(id);
+        if (product == null) {
+            throw new RuntimeException("Product not found");
+        }
+
+        List<String> imageUrls = productImageRepository.findUrlsByProductId(id);
+        List<ResReview> reviewItems = reviewRepository.findByProductId(id);
+
+        ResReviewSummary reviewSummary = new ResReviewSummary();
+        reviewSummary.setAvgRating(product.getAvgRating() != null ? product.getAvgRating() : 0.0);
+        reviewSummary.setTotalReviews(product.getTotalReviews() != null ? product.getTotalReviews() : 0L);
+        reviewSummary.setItems(reviewItems);
+
+        ResProductDetailDTO dto = new ResProductDetailDTO();
+        dto.setProduct(product);
+        dto.setImageUrls(imageUrls != null ? imageUrls : new ArrayList<>());
+        dto.setReviews(reviewSummary);
+
+        return dto;
+    }
+
+    public void createReview(Long userId, CreateReviewDTO createReviewDTO) {
+        Long alreadyReviewed = orderItemRepository.getOrderItemNotReview(createReviewDTO.getOrderItemId(), userId);
+        if (alreadyReviewed == null) {
+            throw new RuntimeException("You have already reviewed this product or you are not eligible to review");
+        }
+        Product product = productRepository.findById(createReviewDTO.getProductId())
+                .orElseThrow(
+                        () -> new RuntimeException("Product not found with id: " + createReviewDTO.getProductId()));
+
+        Review review = new Review();
+        review.setProduct(product);
+        review.setUser(userRepository.getReferenceById(userId));
+        review.setRating(createReviewDTO.getRating());
+        review.setComment(createReviewDTO.getComment());
+
+        reviewRepository.save(review);
+    }
+
+    public FilterProductResponseDTO filterProducts(FilterProductDTO filter) {
+
+        // ===== PRODUCTS QUERY =====
         StringBuilder sql = new StringBuilder("""
-                    SELECT p.id, p.name,
-                        p.original_price AS "originalPrice",
-                        p.price, p.coupon,
-                        COALESCE(ROUND(rv."avgRating",2),0) AS "avgRating",
-                        COALESCE(rv."totalReviews",0) AS "totalReviews",
-                        img.url AS "imageUrl"
-                    FROM products p
+                SELECT p.id, p.name,
+                    p.original_price AS originalPrice,
+                    p.price, p.coupon,
+                    COALESCE(ROUND(CAST(rv.avgRating AS numeric), 2), 0) AS avgRating,
+                    COALESCE(rv.totalReviews, 0) AS totalReviews,
+                    img.url AS imageUrl
+                FROM products p
 
-                    LEFT JOIN (
-                        SELECT
-                            product_id,
-                            AVG(rating) AS "avgRating",
-                            COUNT(*) AS "totalReviews"
-                        FROM reviews
-                        GROUP BY product_id
-                    ) rv ON p.id = rv.product_id
+                LEFT JOIN (
+                    SELECT product_id,
+                           AVG(rating) AS avgRating,
+                           COUNT(*) AS totalReviews
+                    FROM reviews
+                    GROUP BY product_id
+                ) rv ON p.id = rv.product_id
 
-                    LEFT JOIN (
+                LEFT JOIN (
                     SELECT DISTINCT ON (product_id)
                         product_id,
                         url
                     FROM product_images
                     ORDER BY product_id, id
-                    ) img ON p.id = img.product_id
-                    WHERE p.quantity > 0
+                ) img ON p.id = img.product_id
+
+                WHERE p.quantity > 0
                 """);
 
-        // Dùng Map để lưu tham số song song với lúc build chuỗi SQL
         Map<String, Object> params = new HashMap<>();
         buildFilters(sql, filter, params);
+        sql.append(" ORDER BY p.sold DESC");
 
         Query query = entityManager.createNativeQuery(sql.toString());
-        // Gán toàn bộ tham số chỉ bằng 1 dòng
         params.forEach(query::setParameter);
-        // XỬ LÝ LỖI MAPPING: Native query trả về List<Object[]>
+
         @SuppressWarnings("unchecked")
         List<Object[]> rawRows = query.getResultList();
-        // Bạn cần viết một hàm mapToDTO để chuyển đổi Object[] thành ResCardProductDTO
-        return rawRows.stream().map(row -> new ResCardProductDTO() {
+
+        List<ResCardProductDTO> products = rawRows.stream().map(row -> new ResCardProductDTO() {
             public Long getId() {
                 return ((Number) row[0]).longValue();
             }
@@ -183,15 +281,33 @@ public class ProductService {
                 return (String) row[7];
             }
         }).collect(Collectors.toList());
+
+        // ===== COUNT QUERY =====
+        StringBuilder countSql = new StringBuilder("""
+                SELECT COUNT(DISTINCT p.id)
+                FROM products p
+                WHERE p.quantity > 0
+                """);
+
+        Map<String, Object> countParams = new HashMap<>();
+        buildFilters(countSql, filter, countParams);
+
+        Query countQuery = entityManager.createNativeQuery(countSql.toString());
+        countParams.forEach(countQuery::setParameter);
+        Object countResult = countQuery.getSingleResult();
+        long count = countResult instanceof Number ? ((Number) countResult).longValue() : 0L;
+
+        return new FilterProductResponseDTO(products, count);
     }
 
     private void buildFilters(StringBuilder sql, FilterProductDTO filter, Map<String, Object> params) {
         if (filter.getCategory() != null && !filter.getCategory().isEmpty()) {
-            sql.append(" AND ").append("p.category = :category");
+            sql.append(" AND p.category = :category");
             params.put("category", filter.getCategory());
         }
 
-        addInCondition(sql, params, filter.getFactories(), "p.factory IN (:factories)", "factories");
+        addInCondition(sql, params, filter.getFactories(),
+                "p.factory IN (:factories)", "factories");
 
         addInCondition(sql, params, filter.getProductFeatures(),
                 "EXISTS (SELECT 1 FROM product_features pf WHERE pf.product_id = p.id AND pf.feature_id IN (:productFeatures))",
@@ -208,15 +324,10 @@ public class ProductService {
         }
 
         addLikeFilter(sql, params, "p.cpu", "cpu", filter.getCpu());
-
         addLikeFilter(sql, params, "p.ram", "ram", filter.getRam());
-
         addLikeFilter(sql, params, "p.graphics_card", "gpu", filter.getGpu());
-
         addLikeFilter(sql, params, "p.storage", "storage", filter.getStorage());
-
         addLikeFilter(sql, params, "p.screen", "screen", filter.getScreen());
-
         addLikeFilter(sql, params, "p.screen", "screenSize", filter.getScreenSize());
 
         handleBatteryFilter(sql, params, filter.getBattery());
@@ -241,7 +352,6 @@ public class ProductService {
             sql.append("LOWER(").append(column).append(") LIKE LOWER(:").append(paramKey).append(")");
             if (i < values.size() - 1)
                 sql.append(" OR ");
-
             params.put(paramKey, "%" + values.get(i) + "%");
         }
         sql.append(")");

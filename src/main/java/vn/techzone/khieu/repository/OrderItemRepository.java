@@ -6,12 +6,26 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import vn.techzone.khieu.dto.response.order.ResOrderItemDTO;
 import vn.techzone.khieu.dto.response.order.ResOrderUser.ResOrderItemUser;
 import vn.techzone.khieu.entity.OrderItem;
 
+@Repository
 public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
+
+    @Query(value = """
+            SELECT oi.id
+            FROM "order_items" oi
+            JOIN "orders" o ON oi."orderID" = o.id
+            WHERE oi.id = :orderItemId
+                AND o."userID" = :userId
+                AND o.status = 'COMPLETED'
+                AND oi."reviewed" = false
+            LIMIT 1
+            """, nativeQuery = true)
+    Long getOrderItemNotReview(@Param("orderItemId") Long orderItemId, @Param("userId") Long userId);
 
     @Modifying
     @Query("DELETE FROM OrderItem o WHERE o.order.id = :orderId")
