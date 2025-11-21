@@ -14,6 +14,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import vn.techzone.khieu.dto.request.order.CreateOrderDTO;
@@ -52,6 +54,8 @@ public class OrderService {
     private final OrderItemRepository orderItemRepository;
     private final PaymentRepository paymentRepository;
     private final CartRepository cartRepository;
+    @PersistenceContext
+    private EntityManager entityManager;
 
     @Transactional
     public Long createOrder(Long userId, CreateOrderDTO dto) {
@@ -108,13 +112,23 @@ public class OrderService {
         if (!order.getStatus().equals("PENDING")) {
             throw new FailRequestException("Chỉ có thể xóa đơn hàng đang chờ xử lý");
         }
+
         Payment payment = paymentRepository.findByOrderId(orderId);
-        if (payment == null || payment.getMethod().equals("COD") || payment.getStatus().equals("PAID")) {
-            throw new FailRequestException("Không thể xóa đơn hàng đã thanh toán hoặc COD");
+        if (payment == null || payment.getStatus().equals("PAID")) {
+            throw new FailRequestException("Không thể xóa đơn hàng đã thanh toán");
         }
-        paymentRepository.deleteById(payment.getId());
-        orderItemRepository.deleteByOrderId(orderId);
-        orderRepository.deleteByIdAndStatus(orderId, "PENDING");
+
+        entityManager.createNativeQuery("DELETE FROM payments WHERE order_id = :orderId")
+                .setParameter("orderId", orderId)
+                .executeUpdate();
+
+        entityManager.createNativeQuery("DELETE FROM order_items WHERE order_id = :orderId")
+                .setParameter("orderId", orderId)
+                .executeUpdate();
+
+        entityManager.createNativeQuery("DELETE FROM orders WHERE id = :orderId AND status = 'PENDING'")
+                .setParameter("orderId", orderId)
+                .executeUpdate();
     }
 
     public PageResponseDTO<ResOrderDTO> getOrdersPending(Pageable pageable) {
@@ -192,7 +206,7 @@ public class OrderService {
                 paymentRepository.save(payment);
             }
         } else {
-            if (!order.getStatus().equals("PENDING") || !payment.getStatus().equals("PAID")) {
+            if (!order.getStatus().equals("PENDING") || payment.getStatus().equals("PAID")) {
                 throw new FailRequestException("Chỉ có thể hủy đơn hàng khi đang chờ xử lý và chưa thanh toán");
             }
             order.setStatus("CANCELED");

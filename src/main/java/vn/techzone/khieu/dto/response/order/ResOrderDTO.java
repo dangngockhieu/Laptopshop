@@ -1,6 +1,7 @@
 package vn.techzone.khieu.dto.response.order;
 
 import java.time.Instant;
+import java.time.LocalDate;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
@@ -25,8 +26,7 @@ public interface ResOrderDTO {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+7")
     Instant getDeliveryDate();
 
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+7")
-    Instant getExpectedDate();
+    LocalDate getExpectedDate();
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+7")
     Instant getReceivedDate();

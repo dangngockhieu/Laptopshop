@@ -71,7 +71,7 @@ public class Product {
 
     private String factory;
 
-    @OneToMany(mappedBy = "product", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
     @BatchSize(size = 10)
     private Set<ProductImage> images;
 
@@ -81,11 +81,11 @@ public class Product {
     @OneToMany(mappedBy = "product")
     private List<OrderItem> orderItems;
 
-    @OneToMany(mappedBy = "product", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
     @BatchSize(size = 10)
     private Set<Review> reviews;
 
-    @OneToMany(mappedBy = "product", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
     @BatchSize(size = 10)
     private Set<ProductFeature> features;
 }

@@ -33,7 +33,7 @@ public class ResProductDTO {
     private String category;
     private String factory;
     private List<Images> images;
-    private List<Features> features;
+    private List<Long> features;
 
     @Getter
     @Setter
@@ -42,13 +42,5 @@ public class ResProductDTO {
     public static class Images {
         private Long id;
         private String url;
-    }
-
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class Features {
-        private String name;
     }
 }

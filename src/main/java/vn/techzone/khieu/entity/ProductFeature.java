@@ -26,7 +26,7 @@ public class ProductFeature {
     @JoinColumn(name = "product_id")
     private Product product;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("featureId")
     @JoinColumn(name = "feature_id")
     private Feature feature;

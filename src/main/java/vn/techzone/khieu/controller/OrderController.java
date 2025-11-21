@@ -50,9 +50,9 @@ public class OrderController {
         return ResponseEntity.ok(orderId);
     }
 
-    @DeleteMapping()
+    @DeleteMapping("/{orderId}")
     @ApiMessage("Hủy đơn hàng đang chờ xử lý")
-    public ResponseEntity<Void> cancelOrder(@RequestBody Long orderId) {
+    public ResponseEntity<Void> cancelOrder(@PathVariable Long orderId) {
         orderService.deleteOrder(orderId);
         return ResponseEntity.ok().build();
     }
