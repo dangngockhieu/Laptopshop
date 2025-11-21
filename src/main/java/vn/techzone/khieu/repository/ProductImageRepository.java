@@ -12,6 +12,8 @@ import vn.techzone.khieu.entity.ProductImage;
 @Repository
 public interface ProductImageRepository extends JpaRepository<ProductImage, Long> {
 
+    List<ProductImage> findByProductId(Long productId);
+
     @Query(value = "SELECT pi.url FROM product_images pi WHERE pi.product_id = :productId", nativeQuery = true)
     List<String> findUrlsByProductId(@Param("productId") Long productId);
 }

@@ -13,14 +13,10 @@ public class CreateProductDTO {
     @NotNull(message = "OriginalPrice cannot be empty")
     private Integer originalPrice;
 
-    private Integer price;
-
     private Integer coupon;
 
     @NotNull(message = "Quantity cannot be empty")
     private Integer quantity;
-
-    private Integer sold;
 
     private String warranty;
 
