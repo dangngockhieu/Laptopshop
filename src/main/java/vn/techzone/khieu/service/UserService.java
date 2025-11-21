@@ -20,7 +20,7 @@ import vn.techzone.khieu.mapper.UserMapper;
 import vn.techzone.khieu.repository.UserRepository;
 import vn.techzone.khieu.utils.GenericSpecification;
 import vn.techzone.khieu.utils.error.FailRequestException;
-import vn.techzone.khieu.utils.error.NotFoundUserException;
+import vn.techzone.khieu.utils.error.NotFindException;
 
 @Service
 @RequiredArgsConstructor
@@ -60,7 +60,7 @@ public class UserService {
 
     public ResUserDTO getUserById(long id) {
         User user = this.userRepository.findById(id)
-                .orElseThrow(() -> new NotFoundUserException("Không tìm thấy User với ID: " + id));
+                .orElseThrow(() -> new NotFindException("Không tìm thấy User với ID: " + id));
         return this.userMapper.toResUserDTO(user);
     }
 
@@ -81,7 +81,7 @@ public class UserService {
             throw new IllegalArgumentException("Passwords do not match");
         }
         User existingUser = this.userRepository.findByEmail(email)
-                .orElseThrow(() -> new NotFoundUserException("Không tìm thấy User với ID: " + email));
+                .orElseThrow(() -> new NotFindException("Không tìm thấy User với ID: " + email));
         boolean isMatch = passwordEncoder.matches(updatePasswordDTO.getOldPassword(), existingUser.getPassword());
         if (!isMatch) {
             throw new IllegalArgumentException("Mật khẩu không chính xác");
@@ -94,7 +94,7 @@ public class UserService {
 
     public ResUserDTO handleUpdateRole(long id, String role) {
         User existingUser = this.userRepository.findById(id)
-                .orElseThrow(() -> new NotFoundUserException("Không tìm thấy User với ID: " + id));
+                .orElseThrow(() -> new NotFindException("Không tìm thấy User với ID: " + id));
         if (!role.equals("USER") && !role.equals("ADMIN")) {
             throw new IllegalArgumentException("Vai trò không hợp lệ");
         }

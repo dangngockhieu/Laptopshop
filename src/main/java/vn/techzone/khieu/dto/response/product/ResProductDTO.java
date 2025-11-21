@@ -40,6 +40,7 @@ public class ResProductDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class Images {
+        private Long id;
         private String url;
     }
 

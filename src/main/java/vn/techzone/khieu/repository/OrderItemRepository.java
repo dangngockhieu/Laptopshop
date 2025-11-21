@@ -18,9 +18,9 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
     @Query(value = """
             SELECT oi.id
             FROM "order_items" oi
-            JOIN "orders" o ON oi."orderID" = o.id
+            JOIN "orders" o ON oi."order_id" = o.id
             WHERE oi.id = :orderItemId
-                AND o."userID" = :userId
+                AND o."user_id" = :userId
                 AND o.status = 'COMPLETED'
                 AND oi."reviewed" = false
             LIMIT 1

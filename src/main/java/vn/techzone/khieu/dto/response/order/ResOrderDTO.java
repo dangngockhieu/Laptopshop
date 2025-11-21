@@ -22,6 +22,17 @@ public interface ResOrderDTO {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+7")
     Instant getOrderDate();
 
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+7")
+    Instant getDeliveryDate();
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+7")
+    Instant getExpectedDate();
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+7")
+    Instant getReceivedDate();
+
+    String getTrackingCode();
+
     String getPaymentMethod();
 
     String getPaymentStatus();

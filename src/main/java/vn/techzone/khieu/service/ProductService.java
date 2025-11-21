@@ -12,6 +12,7 @@ import jakarta.persistence.Query;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -28,6 +29,7 @@ import vn.techzone.khieu.dto.response.product.ProductDetailDTO.ResProductDetailD
 import vn.techzone.khieu.dto.response.product.ProductDetailDTO.ResReview;
 import vn.techzone.khieu.dto.response.product.ProductDetailDTO.ResReviewSummary;
 import vn.techzone.khieu.dto.response.product.FilterProductResponseDTO;
+import vn.techzone.khieu.dto.response.product.ResBestSeller;
 import vn.techzone.khieu.dto.response.product.ResCardProductDTO;
 import vn.techzone.khieu.entity.Product;
 import vn.techzone.khieu.entity.ProductImage;
@@ -39,6 +41,7 @@ import vn.techzone.khieu.repository.ProductRepository;
 import vn.techzone.khieu.repository.ReviewRepository;
 import vn.techzone.khieu.repository.UserRepository;
 import vn.techzone.khieu.utils.GenericSpecification;
+import vn.techzone.khieu.utils.error.NotFindException;
 import vn.techzone.khieu.utils.error.StorageException;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -91,12 +94,24 @@ public class ProductService {
         return product;
     }
 
-    public PageResponseDTO<ResProductDTO> getAllProducts(Pageable pageable, String keyword) {
+    public PageResponseDTO<ResProductDTO> getAllProducts(Pageable pageable, String keyword, String category,
+            String factory) {
+        if (category == null || category.isBlank()) {
+            throw new IllegalArgumentException("Category is required");
+        }
         Specification<Product> spec = null;
+
+        Specification<Product> categorySpec = GenericSpecification.equal("category", category);
+        spec = spec == null ? categorySpec : spec.and(categorySpec);
 
         if (keyword != null && !keyword.isBlank()) {
             Specification<Product> nameSpec = GenericSpecification.like("name", keyword);
             spec = spec == null ? nameSpec : spec.and(nameSpec);
+        }
+
+        if (factory != null && !factory.isBlank() && !factory.equalsIgnoreCase("ALL")) {
+            Specification<Product> factorySpec = GenericSpecification.equal("factory", factory);
+            spec = spec == null ? factorySpec : spec.and(factorySpec);
         }
         Page<Product> productPage = productRepository.findAll(spec, pageable);
         List<ResProductDTO> products = productPage.getContent().stream()
@@ -115,7 +130,7 @@ public class ProductService {
         return productRepository.findAllProductsCategory(category);
     }
 
-    public List<ResCardProductDTO> getTopProducts() {
+    public List<ResBestSeller> getTopProducts() {
         return productRepository.findAllProducts();
     }
 
@@ -192,11 +207,12 @@ public class ProductService {
     public void createReview(Long userId, CreateReviewDTO createReviewDTO) {
         Long alreadyReviewed = orderItemRepository.getOrderItemNotReview(createReviewDTO.getOrderItemId(), userId);
         if (alreadyReviewed == null) {
-            throw new RuntimeException("You have already reviewed this product or you are not eligible to review");
+            throw new BadCredentialsException(
+                    "You have already reviewed this product or you are not eligible to review");
         }
         Product product = productRepository.findById(createReviewDTO.getProductId())
                 .orElseThrow(
-                        () -> new RuntimeException("Product not found with id: " + createReviewDTO.getProductId()));
+                        () -> new NotFindException("Product not found with id: " + createReviewDTO.getProductId()));
 
         Review review = new Review();
         review.setProduct(product);
@@ -205,6 +221,10 @@ public class ProductService {
         review.setComment(createReviewDTO.getComment());
 
         reviewRepository.save(review);
+    }
+
+    public Long countProducts() {
+        return productRepository.countLongByQuantityGreaterThan(0);
     }
 
     public FilterProductResponseDTO filterProducts(FilterProductDTO filter) {

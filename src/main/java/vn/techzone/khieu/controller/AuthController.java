@@ -38,7 +38,7 @@ import vn.techzone.khieu.service.UserService;
 import vn.techzone.khieu.service.user.UserPrincipal;
 import vn.techzone.khieu.utils.SecurityUtil;
 import vn.techzone.khieu.utils.annotation.ApiMessage;
-import vn.techzone.khieu.utils.error.NotFoundUserException;
+import vn.techzone.khieu.utils.error.NotFindException;
 import vn.techzone.khieu.utils.error.UnauthorizedException;
 
 @RestController
@@ -98,7 +98,7 @@ public class AuthController {
         public ResponseEntity<ResLoginDTO.UserInfo> getAccount() {
                 String email = SecurityUtil.getCurrentUserLogin().orElse(null);
                 User user = this.userService.findUserByEmail(email)
-                                .orElseThrow(() -> new NotFoundUserException(
+                                .orElseThrow(() -> new NotFindException(
                                                 "Không tìm thấy User với email: " + email));
 
                 ResLoginDTO.UserInfo userInfo = new ResLoginDTO.UserInfo(

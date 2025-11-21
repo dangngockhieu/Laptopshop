@@ -31,6 +31,7 @@ import vn.techzone.khieu.dto.response.product.ResProductDTO;
 import vn.techzone.khieu.dto.response.product.ProductDetailDTO.ResProductDetailDTO;
 import vn.techzone.khieu.dto.response.user.ResStringDTO;
 import vn.techzone.khieu.dto.response.product.FilterProductResponseDTO;
+import vn.techzone.khieu.dto.response.product.ResBestSeller;
 import vn.techzone.khieu.dto.response.product.ResCardProductDTO;
 import vn.techzone.khieu.entity.Product;
 import vn.techzone.khieu.service.ProductService;
@@ -54,21 +55,31 @@ public class ProductController {
         return ResponseEntity.ok(product);
     }
 
-    @GetMapping()
+    @GetMapping("/products-paginate")
     @ApiMessage("Lấy danh sách sản phẩm")
     public ResponseEntity<PageResponseDTO<ResProductDTO>> getAllUsers(
             @RequestParam(value = "current", defaultValue = "1") int current,
             @RequestParam(value = "pageSize", defaultValue = "10") int pageSize,
-            @RequestParam(value = "keyword", required = false) String keyword) {
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "category") String category,
+            @RequestParam(value = "factory", required = false) String factory) {
         Pageable pageable = PageRequest.of(current - 1, pageSize, Sort.by(Sort.Direction.ASC, "id"));
-        PageResponseDTO<ResProductDTO> products = this.productService.getAllProducts(pageable, keyword);
+        PageResponseDTO<ResProductDTO> products = this.productService.getAllProducts(pageable, keyword, category,
+                factory);
         return ResponseEntity.ok(products);
     }
 
     @GetMapping("/top-products")
     @ApiMessage("Lấy danh sách sản phẩm bán chạy")
-    public ResponseEntity<List<ResCardProductDTO>> getTopProducts() {
+    public ResponseEntity<List<ResBestSeller>> getTopProducts() {
         return ResponseEntity.ok(this.productService.getTopProducts());
+    }
+
+    @GetMapping("/count")
+    @ApiMessage("Đếm số lượng sản phẩm có trong kho")
+    public ResponseEntity<Long> countProducts() {
+        Long count = this.productService.countProducts();
+        return ResponseEntity.ok(count);
     }
 
     @GetMapping("/top-products-category")
@@ -95,6 +106,7 @@ public class ProductController {
         return ResponseEntity.ok(new ResStringDTO("Đánh giá đã được tạo thành công"));
     }
 
+    ////////////////////////////////////////////////////////////////////////////////////
     @PatchMapping("/{id}")
     @ApiMessage("Cập nhật thông tin sản phẩm")
     public ResponseEntity<ResProductDTO> updateProduct(@Valid @RequestBody UpdateProductDTO updateProductDTO,

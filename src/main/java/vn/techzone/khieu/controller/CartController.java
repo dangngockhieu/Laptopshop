@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import vn.techzone.khieu.dto.request.cart.ProductIdDTO;
+import vn.techzone.khieu.dto.request.ProductIdDTO;
 import vn.techzone.khieu.dto.request.cart.UpdateQuantityCartDTO;
 import vn.techzone.khieu.dto.response.cart.ResCartDTO;
 import vn.techzone.khieu.service.CartService;
