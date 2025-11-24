@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import vn.techzone.khieu.service.PaymentService;
 import vn.techzone.khieu.utils.SecurityUtil;
 import vn.techzone.khieu.utils.annotation.ApiMessage;
+import vn.techzone.khieu.utils.annotation.RateLimit;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +21,7 @@ public class PaymentController {
     private final PaymentService paymentService;
 
     @PostMapping("/user/create")
+    @RateLimit(capacity = 1, minutes = 3)
     @ApiMessage("Tạo URL thanh toán thành công")
     public ResponseEntity<Map<String, String>> createPayment(
             @RequestBody Map<String, Long> body,

@@ -17,6 +17,7 @@ import vn.techzone.khieu.service.ChatBotService;
 import vn.techzone.khieu.service.ChatMessageService;
 import vn.techzone.khieu.utils.SecurityUtil;
 import vn.techzone.khieu.utils.annotation.ApiMessage;
+import vn.techzone.khieu.utils.annotation.RateLimit;
 
 @RestController
 @RequestMapping("/api/chat")
@@ -26,6 +27,7 @@ public class ChatBotController {
     private final ChatMessageService chatMessageService;
 
     @PostMapping("/user/ask")
+    @RateLimit(capacity = 2, minutes = 1)
     @ApiMessage("Chat với AI")
     public ResponseEntity<ChatResponseDTO> ask(@RequestBody ChatRequestDTO dto) {
         Long userId = SecurityUtil.getCurrentUserId();
