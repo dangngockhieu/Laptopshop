@@ -93,7 +93,7 @@ public class AuthController {
                                 .body(res);
         }
 
-        @GetMapping("/account")
+        @GetMapping("/user/account")
         @ApiMessage("Thông tin tài khoản")
         public ResponseEntity<ResLoginDTO.UserInfo> getAccount() {
                 String email = SecurityUtil.getCurrentUserLogin().orElse(null);
@@ -151,7 +151,7 @@ public class AuthController {
                                 .body(res);
         }
 
-        @PostMapping("/logout")
+        @PostMapping("/user/logout")
         @ApiMessage("Logout")
         public ResponseEntity<Void> handleLogout() {
                 String email = SecurityUtil.getCurrentUserLogin().orElse(null);

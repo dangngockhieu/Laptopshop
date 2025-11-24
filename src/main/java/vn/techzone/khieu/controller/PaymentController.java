@@ -19,7 +19,7 @@ import java.util.Map;
 public class PaymentController {
     private final PaymentService paymentService;
 
-    @PostMapping("/create")
+    @PostMapping("/user/create")
     @ApiMessage("Tạo URL thanh toán thành công")
     public ResponseEntity<Map<String, String>> createPayment(
             @RequestBody Map<String, Long> body,
@@ -36,15 +36,13 @@ public class PaymentController {
 
         String paymentUrl = paymentService.createPaymentUrl(orderId, userId, ipAddr);
 
-        // FormatResponse sẽ tự wrap vào RestResponse.data
         return ResponseEntity.ok(Map.of("paymentUrl", paymentUrl));
     }
 
-    @GetMapping("/status")
+    @GetMapping("/user/status")
     @ApiMessage("Lấy trạng thái thanh toán thành công")
     public ResponseEntity<?> checkStatus(@RequestParam Long orderID) {
         Long userId = SecurityUtil.getCurrentUserId();
-        // FormatResponse tự wrap — không cần tự tạo wrapper
         return ResponseEntity.ok(paymentService.checkPaymentStatus(orderID, userId));
     }
 

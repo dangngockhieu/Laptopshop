@@ -27,7 +27,7 @@ import vn.techzone.khieu.utils.annotation.ApiMessage;
 public class CartController {
     private final CartService cartService;
 
-    @PostMapping()
+    @PostMapping("/user")
     @ApiMessage("Thêm sản phẩm vào giỏ hàng")
     public ResponseEntity<Void> addProductToCart(@Valid @RequestBody ProductIdDTO productIdDTO) {
         Long userId = SecurityUtil.getCurrentUserId();
@@ -35,7 +35,7 @@ public class CartController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/number-cart")
+    @GetMapping("/user/number-cart")
     @ApiMessage("Lấy số lượng sản phẩm trong giỏ hàng")
     public ResponseEntity<Long> numberCart() {
         Long userId = SecurityUtil.getCurrentUserId();
@@ -43,14 +43,14 @@ public class CartController {
         return ResponseEntity.ok(numberCart);
     }
 
-    @GetMapping()
+    @GetMapping("/user")
     @ApiMessage("Lấy thông tin giỏ hàng")
     public ResponseEntity<List<ResCartDTO>> getCart() {
         Long userId = SecurityUtil.getCurrentUserId();
         return ResponseEntity.ok(cartService.getCart(userId));
     }
 
-    @PatchMapping("/update-quantity")
+    @PatchMapping("/user/update-quantity")
     @ApiMessage("Cập nhật số lượng sản phẩm trong giỏ hàng")
     public ResponseEntity<Void> updateQuantityCart(@Valid @RequestBody UpdateQuantityCartDTO updateQuantityCartDTO) {
         Long userId = SecurityUtil.getCurrentUserId();
@@ -59,7 +59,7 @@ public class CartController {
         return ResponseEntity.ok().build();
     }
 
-    @DeleteMapping()
+    @DeleteMapping("/user")
     @ApiMessage("Xóa sản phẩm khỏi giỏ hàng")
     public ResponseEntity<ResStringDTO> removeProductFromCart(@Valid @RequestBody ProductIdDTO productIdDTO) {
         Long userId = SecurityUtil.getCurrentUserId();
@@ -67,7 +67,7 @@ public class CartController {
         return ResponseEntity.ok().body(new ResStringDTO("Xóa sản phẩm khỏi giỏ hàng thành công"));
     }
 
-    @PostMapping("/buy-now")
+    @PostMapping("/user/buy-now")
     @ApiMessage("Buy Now")
     public ResponseEntity<ResStringDTO> buyNow(@Valid @RequestBody ProductIdDTO productIdDTO) {
         Long userId = SecurityUtil.getCurrentUserId();
@@ -75,7 +75,7 @@ public class CartController {
         return ResponseEntity.ok().body(new ResStringDTO("Mua ngay thành công"));
     }
 
-    @PatchMapping("/checkout")
+    @PatchMapping("/user/checkout")
     @ApiMessage("Checkout sản phẩm trong giỏ hàng")
     public ResponseEntity<ResStringDTO> checkout() {
         Long userId = SecurityUtil.getCurrentUserId();

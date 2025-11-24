@@ -37,7 +37,7 @@ public class JWTConfiguration {
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
         JwtGrantedAuthoritiesConverter converter = new JwtGrantedAuthoritiesConverter();
-        converter.setAuthorityPrefix("");
+        converter.setAuthorityPrefix("ROLE_");
         converter.setAuthoritiesClaimName("permissions");
         JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
 

@@ -58,12 +58,6 @@ public class UserService {
                 userPage.getSize());
     }
 
-    public ResUserDTO getUserById(long id) {
-        User user = this.userRepository.findById(id)
-                .orElseThrow(() -> new NotFindException("Không tìm thấy User với ID: " + id));
-        return this.userMapper.toResUserDTO(user);
-    }
-
     public ResUserDTO handleCreateUserForAdmin(CreateUserDTO userDTO) {
         if (userRepository.existsByEmail(userDTO.getEmail())) {
             throw new FailRequestException("Thông tin gửi lên Không hợp lệ");

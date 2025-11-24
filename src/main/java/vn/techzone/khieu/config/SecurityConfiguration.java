@@ -38,14 +38,20 @@ public class SecurityConfiguration {
                                 .cors(Customizer.withDefaults())
                                 .authorizeHttpRequests(
                                                 authz -> authz
-                                                                .requestMatchers("/api/auth/login",
-                                                                                "/api/auth/refresh",
-                                                                                "/api/auth/register",
-                                                                                "/storage/**")
-                                                                .permitAll()
+                                                                // CÁC API ADMIN
+                                                                .requestMatchers("/api/**/admin/**").hasRole("ADMIN")
+                                                                // CÁC API CỦA USER (USER và ADMIN đều được vào)
+                                                                .requestMatchers("/api/**/user/**")
+                                                                .hasAnyRole("USER", "ADMIN")
+
+                                                                // CÁC API Public
+                                                                .requestMatchers("/api/auth/**").permitAll()
+                                                                .requestMatchers("/api/payment/return").permitAll()
+                                                                .requestMatchers("/api/products/**").permitAll()
+                                                                .requestMatchers("/storage/**").permitAll()
+
                                                                 .requestMatchers("/").permitAll()
-                                                                .anyRequest().permitAll())
-                                // .authenticated())
+                                                                .anyRequest().authenticated())
                                 .oauth2ResourceServer(oauth2 -> oauth2
                                                 .jwt(jwt -> jwt
                                                                 .jwtAuthenticationConverter(jwtAuthenticationConverter))
