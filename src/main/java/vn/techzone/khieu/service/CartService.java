@@ -63,8 +63,6 @@ public class CartService {
             Cart cart = existingCart.get();
             cart.setNumber(quantity);
             cartRepository.save(cart);
-        } else {
-            throw new FailRequestException("Sản phẩm không tồn tại trong giỏ hàng");
         }
     }
 
@@ -72,8 +70,6 @@ public class CartService {
         CartId cartId = new CartId(userId, productId);
         if (cartRepository.existsById(cartId)) {
             cartRepository.deleteById(cartId);
-        } else {
-            throw new FailRequestException("Sản phẩm không tồn tại trong giỏ hàng");
         }
     }
 

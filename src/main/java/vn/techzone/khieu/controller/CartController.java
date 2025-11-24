@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import vn.techzone.khieu.dto.request.ProductIdDTO;
 import vn.techzone.khieu.dto.request.cart.UpdateQuantityCartDTO;
 import vn.techzone.khieu.dto.response.cart.ResCartDTO;
+import vn.techzone.khieu.dto.response.user.ResStringDTO;
 import vn.techzone.khieu.service.CartService;
 import vn.techzone.khieu.utils.SecurityUtil;
 import vn.techzone.khieu.utils.annotation.ApiMessage;
@@ -60,25 +61,25 @@ public class CartController {
 
     @DeleteMapping()
     @ApiMessage("Xóa sản phẩm khỏi giỏ hàng")
-    public ResponseEntity<Void> removeProductFromCart(@Valid @RequestBody ProductIdDTO productIdDTO) {
+    public ResponseEntity<ResStringDTO> removeProductFromCart(@Valid @RequestBody ProductIdDTO productIdDTO) {
         Long userId = SecurityUtil.getCurrentUserId();
         cartService.deleteProductInCart(userId, productIdDTO.getProductId());
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok().body(new ResStringDTO("Xóa sản phẩm khỏi giỏ hàng thành công"));
     }
 
     @PostMapping("/buy-now")
     @ApiMessage("Buy Now")
-    public ResponseEntity<Void> buyNow(@Valid @RequestBody ProductIdDTO productIdDTO) {
+    public ResponseEntity<ResStringDTO> buyNow(@Valid @RequestBody ProductIdDTO productIdDTO) {
         Long userId = SecurityUtil.getCurrentUserId();
         cartService.buyNow(userId, productIdDTO.getProductId());
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok().body(new ResStringDTO("Mua ngay thành công"));
     }
 
     @PatchMapping("/checkout")
     @ApiMessage("Checkout sản phẩm trong giỏ hàng")
-    public ResponseEntity<Void> checkout() {
+    public ResponseEntity<ResStringDTO> checkout() {
         Long userId = SecurityUtil.getCurrentUserId();
         cartService.checkout(userId);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok().body(new ResStringDTO("Checkout thành công"));
     }
 }
