@@ -30,6 +30,7 @@ import vn.techzone.khieu.dto.request.product.UpdateProductDTO;
 import vn.techzone.khieu.dto.request.review.CreateReviewDTO;
 import vn.techzone.khieu.dto.response.PageResponseDTO;
 import vn.techzone.khieu.dto.response.product.ResProductDTO;
+import vn.techzone.khieu.dto.response.product.AllProductForChatBot.ResProductforAiChatBotDTO;
 import vn.techzone.khieu.dto.response.product.ProductDetailDTO.ResProductDetailDTO;
 import vn.techzone.khieu.dto.response.user.ResStringDTO;
 import vn.techzone.khieu.dto.response.product.FilterProductResponseDTO;
@@ -83,6 +84,13 @@ public class ProductController {
             e.printStackTrace();
             return ResponseEntity.internalServerError().body(new ResStringDTO("Lỗi khi xử lý file: " + e.getMessage()));
         }
+    }
+
+    @GetMapping("/all-products")
+    @ApiMessage("Lấy tất cả sản phẩm (không phân trang)")
+    public ResponseEntity<List<ResProductforAiChatBotDTO>> getAllProducts() {
+        List<ResProductforAiChatBotDTO> products = this.productService.getAllProductsForChatBot();
+        return ResponseEntity.ok(products);
     }
 
     @GetMapping("/products-paginate")
