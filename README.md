@@ -1,4 +1,4 @@
-# 🛍️ TechZone – Fullstack E-commerce System
+# 🛍️ TechZone – E-commerce System
 
 Trang web mua sắm laptop trực tuyến với **Spring and React**
 
@@ -16,7 +16,6 @@ Trang web mua sắm laptop trực tuyến với **Spring and React**
 Dự án bao gồm:
 
 - 🧠 **Backend**: REST API với Spring, JPA, JWT, Argon2
-- 💻 **Frontend**: React + Vite + React-Bootstrap + Axios
 - 🗄️ **Database**: PostgreSQL
 
 ---
@@ -25,7 +24,6 @@ Dự án bao gồm:
 
 | Phần         | Công nghệ                           | Mô tả                            |
 | ------------ | ----------------------------------- | -------------------------------- |
-| **Frontend** | React, Vite, React-Bootstrap, Axios | Giao diện web hiện đại           |
 | **Backend**  | Spring, JPA, Argon2                 | Xử lý logic & API                |
 | **Auth**     | JWT, Cookies, Email Verification    | Hệ thống xác thực                |
 | **Mailer**   | Gmail App Password                  | Gửi mail xác thực/reset password |
