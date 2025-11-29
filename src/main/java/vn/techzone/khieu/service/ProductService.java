@@ -15,7 +15,6 @@ import jakarta.persistence.Query;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -25,7 +24,6 @@ import vn.techzone.khieu.dto.request.product.CreateProductDTO;
 import vn.techzone.khieu.dto.request.product.FilterProductDTO;
 import vn.techzone.khieu.dto.request.product.ProductFeatureDTO;
 import vn.techzone.khieu.dto.request.product.UpdateProductDTO;
-import vn.techzone.khieu.dto.request.review.CreateReviewDTO;
 import vn.techzone.khieu.dto.response.PageResponseDTO;
 import vn.techzone.khieu.dto.response.product.ResProductDTO;
 import vn.techzone.khieu.dto.response.product.AllProductForChatBot.ResProductforAiChatBotDTO;
@@ -39,13 +37,10 @@ import vn.techzone.khieu.dto.response.product.ResBestSeller;
 import vn.techzone.khieu.dto.response.product.ResCardProductDTO;
 import vn.techzone.khieu.entity.Product;
 import vn.techzone.khieu.entity.ProductImage;
-import vn.techzone.khieu.entity.Review;
 import vn.techzone.khieu.mapper.ProductMapper;
-import vn.techzone.khieu.repository.OrderItemRepository;
 import vn.techzone.khieu.repository.ProductImageRepository;
 import vn.techzone.khieu.repository.ProductRepository;
 import vn.techzone.khieu.repository.ReviewRepository;
-import vn.techzone.khieu.repository.UserRepository;
 import vn.techzone.khieu.utils.GenericSpecification;
 import vn.techzone.khieu.utils.error.FailRequestException;
 import vn.techzone.khieu.utils.error.NotFindException;
@@ -61,8 +56,7 @@ public class ProductService {
     private final FileService fileService;
     private final ReviewRepository reviewRepository;
     private final ProductImageRepository productImageRepository;
-    private final OrderItemRepository orderItemRepository;
-    private final UserRepository userRepository;
+    private final ProductImageService productImageService;
     private static final String PRODUCT_FOLDER = "products";
 
     @Transactional
@@ -104,59 +98,6 @@ public class ProductService {
         }
 
         return product;
-    }
-
-    @Transactional
-    public void addProductImages(Long productId, List<MultipartFile> images)
-            throws URISyntaxException, IOException, StorageException {
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new FailRequestException("Sản phẩm không tồn tại"));
-
-        List<String> uploadedUrls = new ArrayList<>();
-        try {
-            if (images != null && !images.isEmpty()) {
-                fileService.createDirectory(PRODUCT_FOLDER);
-                for (MultipartFile image : images) {
-                    String uploadedFileName = fileService.store(image, PRODUCT_FOLDER);
-                    String url = "/storage/" + PRODUCT_FOLDER + "/" + uploadedFileName;
-                    uploadedUrls.add(url);
-
-                    ProductImage productImage = new ProductImage();
-                    productImage.setUrl(url);
-                    productImage.setProduct(product);
-                    productImageRepository.save(productImage);
-                }
-            }
-        } catch (Exception e) {
-            uploadedUrls.forEach(url -> {
-                try {
-                    fileService.delete(PRODUCT_FOLDER, url.substring(url.lastIndexOf("/") + 1));
-                } catch (StorageException | URISyntaxException e1) {
-                    e1.printStackTrace();
-                }
-            });
-            throw e;
-        }
-    }
-
-    public void deleteProductImage(Long imageId) throws StorageException, URISyntaxException {
-        ProductImage image = productImageRepository.findById(imageId)
-                .orElseThrow(() -> new FailRequestException("Ảnh không tồn tại"));
-
-        fileService.delete(PRODUCT_FOLDER, image.getUrl().substring(image.getUrl().lastIndexOf("/") + 1));
-        productImageRepository.deleteById(imageId);
-    }
-
-    private void deleteProductImageByProductId(Long productId) throws StorageException, URISyntaxException {
-        List<ProductImage> images = productImageRepository.findByProductId(productId);
-        if (images.isEmpty()) {
-            throw new FailRequestException("Ảnh không tồn tại");
-        }
-
-        for (ProductImage image : images) {
-            fileService.delete(PRODUCT_FOLDER, image.getUrl().substring(image.getUrl().lastIndexOf("/") + 1));
-            productImageRepository.deleteById(image.getId());
-        }
     }
 
     @Transactional(readOnly = true)
@@ -287,25 +228,6 @@ public class ProductService {
         return dto;
     }
 
-    public void createReview(Long userId, CreateReviewDTO createReviewDTO) {
-        Long alreadyReviewed = orderItemRepository.getOrderItemNotReview(createReviewDTO.getOrderItemId(), userId);
-        if (alreadyReviewed == null) {
-            throw new BadCredentialsException(
-                    "You have already reviewed this product or you are not eligible to review");
-        }
-        Product product = productRepository.findById(createReviewDTO.getProductId())
-                .orElseThrow(
-                        () -> new NotFindException("Product not found with id: " + createReviewDTO.getProductId()));
-
-        Review review = new Review();
-        review.setProduct(product);
-        review.setUser(userRepository.getReferenceById(userId));
-        review.setRating(createReviewDTO.getRating());
-        review.setComment(createReviewDTO.getComment());
-
-        reviewRepository.save(review);
-    }
-
     public List<ResProductforAiChatBotDTO> getAllProductsForChatBot() {
         List<ResProductforAiChatBotProjection> projections = productRepository.findAllProductsforChatBot();
         return projections.stream()
@@ -343,7 +265,7 @@ public class ProductService {
         }
         productRepository.deleteFeature(id);
         try {
-            deleteProductImageByProductId(id);
+            productImageService.deleteProductImageByProductId(id);
         } catch (StorageException | URISyntaxException e) {
             throw new RuntimeException("Failed to delete product images", e);
         }
