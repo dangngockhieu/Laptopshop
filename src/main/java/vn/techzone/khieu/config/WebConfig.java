@@ -17,6 +17,5 @@ public class WebConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(rateLimitInterceptor)
                 .addPathPatterns("/api/chat/ask", "/api/payment/create");
-        // .excludePathPatterns("/api/products/**"); // Có thể loại trừ nếu thích
     }
 }
