@@ -6,6 +6,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.service.annotation.GetExchange;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import vn.techzone.khieu.dto.request.ProductIdDTO;
@@ -39,12 +41,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 @RestController
 @RequestMapping("/api/orders")
 @RequiredArgsConstructor
+@Tag(name = "3. Đơn hàng (Order)", description = "Tạo đơn hàng, cập nhật trạng thái và thống kê doanh thu")
 public class OrderController {
     private final OrderService orderService;
     private final CartService cartService;
     private final RevenueService revenueService;
 
-    @PostMapping("/user")
+    @PostMapping()
+    @PreAuthorize("hasRole('ADMIN', 'USER')")
     @ApiMessage("Tạo đơn hàng mới")
     public ResponseEntity<Long> createOrder(@Valid @RequestBody CreateOrderDTO createOrderDTO) {
         Long userId = SecurityUtil.getCurrentUserId();
@@ -52,14 +56,16 @@ public class OrderController {
         return ResponseEntity.ok(orderId);
     }
 
-    @DeleteMapping("/admin/{orderId}")
+    @DeleteMapping("/{orderId}")
+    @PreAuthorize("hasRole('ADMIN')")
     @ApiMessage("Hủy đơn hàng đang chờ xử lý")
     public ResponseEntity<Void> cancelOrder(@PathVariable Long orderId) {
         orderService.deleteOrder(orderId);
         return ResponseEntity.ok().build();
     }
 
-    @GetExchange("/admin/pending")
+    @GetExchange("/pending")
+    @PreAuthorize("hasRole('ADMIN')")
     @ApiMessage("Lấy danh sách đơn hàng đang chờ xử lý")
     public ResponseEntity<PageResponseDTO<ResOrderDTO>> getOrdersPending(
             @RequestParam(value = "current", defaultValue = "1") int current,
@@ -68,7 +74,8 @@ public class OrderController {
         return ResponseEntity.ok(orderService.getOrdersPending(pageable));
     }
 
-    @GetExchange("/admin/status")
+    @GetExchange("/status")
+    @PreAuthorize("hasRole('ADMIN')")
     @ApiMessage("Lấy danh sách đơn hàng theo trạng thái")
     public ResponseEntity<PageResponseDTO<ResOrderDTO>> getOrdersStatus(
             @RequestParam String status,
@@ -78,13 +85,15 @@ public class OrderController {
         return ResponseEntity.ok(orderService.getOrdersStatus(status, pageable));
     }
 
-    @GetMapping("/admin/order-item")
+    @GetMapping("/order-item")
+    @PreAuthorize("hasRole('ADMIN')")
     @ApiMessage("Lấy danh sách sản phẩm trong đơn hàng")
     public ResponseEntity<List<ResOrderItemDTO>> getOrderItems(@RequestParam Long orderId) {
         return ResponseEntity.ok(orderService.getOrderItems(orderId));
     }
 
-    @PatchMapping("/admin/updateToShipping/{orderId}")
+    @PatchMapping("/updateToShipping/{orderId}")
+    @PreAuthorize("hasRole('ADMIN')")
     @ApiMessage("Cập nhật trạng thái đơn hàng sang Đang giao")
     public ResponseEntity<Void> updateOrderToShipping(@Valid @RequestBody UpdateToShippingDTO dto,
             @PathVariable Long orderId) {
@@ -92,7 +101,8 @@ public class OrderController {
         return ResponseEntity.ok().build();
     }
 
-    @PatchMapping("/user/updateToStatus/{orderId}")
+    @PatchMapping("/updateToStatus/{orderId}")
+    @PreAuthorize("hasRole('ADMIN', 'USER')")
     @ApiMessage("Cập nhật trạng thái đơn hàng")
     public ResponseEntity<Void> updateOrderStatus(@Valid @RequestBody UpdateToStatusDTO dto,
             @PathVariable Long orderId) {
@@ -101,32 +111,37 @@ public class OrderController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/user/user-orders")
+    @GetMapping("/user-orders")
+    @PreAuthorize("hasRole('ADMIN', 'USER')")
     @ApiMessage("Lấy danh sách đơn hàng của người dùng")
     public ResponseEntity<List<ResOrderUserDTO>> getUserOrders(@RequestParam String status) {
         Long userId = SecurityUtil.getCurrentUserId();
         return ResponseEntity.ok(orderService.getUserOrders(userId, status));
     }
 
-    @GetMapping("/admin/count")
+    @GetMapping("/count")
+    @PreAuthorize("hasRole('ADMIN')")
     @ApiMessage("Đếm số lượng đơn hàng")
     public ResponseEntity<ResOrderCountDTO> countOrdersByStatus() {
         return ResponseEntity.ok(revenueService.countOrders());
     }
 
-    @GetMapping("/admin/revenue")
+    @GetMapping("/revenue")
+    @PreAuthorize("hasRole('ADMIN')")
     @ApiMessage("Thống kê doanh thu theo tháng")
     public ResponseEntity<ResRevenueThisMonthDTO> getRevenueThisMonth() {
         return ResponseEntity.ok(revenueService.getRevenueThisMonth());
     }
 
-    @GetMapping("/admin/revenue-by-month")
+    @GetMapping("/revenue-by-month")
+    @PreAuthorize("hasRole('ADMIN')")
     @ApiMessage("Thống kê doanh thu theo tháng trong năm")
     public ResponseEntity<List<Long>> getRevenueByMonth() {
         return ResponseEntity.ok(revenueService.getRevenueByMonth());
     }
 
-    @PostMapping("/user/buy-again")
+    @PostMapping("/buy-again")
+    @PreAuthorize("hasRole('ADMIN', 'USER')")
     @ApiMessage("Mua lại đơn hàng")
     public ResponseEntity<ResStringDTO> buyAgain(@Valid @RequestBody List<ProductIdDTO> productIdDTOs) {
         Long userId = SecurityUtil.getCurrentUserId();

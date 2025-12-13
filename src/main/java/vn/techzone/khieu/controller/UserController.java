@@ -5,6 +5,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import vn.techzone.khieu.dto.request.user.CreateUserDTO;
@@ -29,10 +31,12 @@ import vn.techzone.khieu.utils.error.NotFindException;
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
+@Tag(name = "6. Người dùng (User)", description = "Quản lý danh sách người dùng, đổi mật khẩu và cấp quyền Admin/User")
 public class UserController {
     private final UserService userService;
 
-    @GetMapping("/admin")
+    @GetMapping()
+    @PreAuthorize("hasRole('ADMIN')")
     @ApiMessage("Lấy danh sách người dùng")
     public ResponseEntity<PageResponseDTO<ResUserDTO>> getAllUsers(
             @RequestParam(value = "current", defaultValue = "1") int current,
@@ -43,14 +47,16 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
 
-    @PostMapping("/admin")
+    @PostMapping()
+    @PreAuthorize("hasRole('ADMIN')")
     @ApiMessage("Tạo mới người dùng cho Admin")
     public ResponseEntity<ResUserDTO> createUserForAdmin(@Valid @RequestBody CreateUserDTO userDTO) {
         ResUserDTO user = this.userService.handleCreateUserForAdmin(userDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(user);
     }
 
-    @PatchMapping("/user/change-password")
+    @PatchMapping("/change-password")
+    @PreAuthorize("hasRole('ADMIN', 'USER')")
     @ApiMessage("Cập nhật mật khẩu người dùng")
     public ResponseEntity<ResUserDTO> updatePasswordUser(@Valid @RequestBody UpdatePasswordDTO updatePasswordDTO) {
         String email = SecurityUtil.getCurrentUserLogin().orElse(null);
@@ -61,7 +67,8 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.OK).body(user);
     }
 
-    @PatchMapping("/admin/role/{id}")
+    @PatchMapping("/role/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @ApiMessage("Cập nhật quyền hạn người dùng")
     public ResponseEntity<ResUserDTO> updateRoleUser(@PathVariable("id") long id,
             @Valid @RequestBody UpdateRoleDTO updateRoleDTO) {
@@ -69,7 +76,8 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.OK).body(user);
     }
 
-    @GetMapping("/admin/count")
+    @GetMapping("/count")
+    @PreAuthorize("hasRole('ADMIN')")
     @ApiMessage("Đếm số lượng người dùng")
     public ResponseEntity<Long> countUsers() {
         long count = this.userService.countUsers();
