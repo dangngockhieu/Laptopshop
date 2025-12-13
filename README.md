@@ -61,19 +61,6 @@ This structure improves maintainability and scalability.
 
 ---
 
-## 🔄 Migration from Node.js Version
-
-Originally built with Node.js (Express):
-https://github.com/dangngockhieu/Do_an1.git
-
-This version was re-implemented using Spring Boot to achieve:
-
-- Strong type safety
-- Better structured architecture
-- Improved scalability for larger systems
-
----
-
 ### 🎨 Figma Design
 
 🔗 [View Figma Design](https://www.figma.com/design/TrdxY3Fw1Iz9EdEhLgBJvc/Untitled?node-id=0-1&p=f&t=2A3bGnTvSRHaNvSl-0)
