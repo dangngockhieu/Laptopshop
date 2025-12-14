@@ -21,6 +21,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.data.jpa.domain.Specification;
+
+import com.turkraft.springfilter.boot.Filter;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -101,12 +104,9 @@ public class ProductController {
     public ResponseEntity<PageResponseDTO<ResProductDTO>> getAllProducts(
             @RequestParam(value = "current", defaultValue = "1") int current,
             @RequestParam(value = "pageSize", defaultValue = "10") int pageSize,
-            @RequestParam(value = "keyword", required = false) String keyword,
-            @RequestParam(value = "category") String category,
-            @RequestParam(value = "factory", required = false) String factory) {
+            @Filter Specification<Product> spec) {
         Pageable pageable = PageRequest.of(current - 1, pageSize, Sort.by(Sort.Direction.ASC, "id"));
-        PageResponseDTO<ResProductDTO> products = this.productService.getAllProducts(pageable, keyword, category,
-                factory);
+        PageResponseDTO<ResProductDTO> products = this.productService.getAllProducts(pageable, spec);
         return ResponseEntity.ok(products);
     }
 

@@ -3,6 +3,7 @@ package vn.techzone.khieu.controller;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -15,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.turkraft.springfilter.boot.Filter;
+
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +26,7 @@ import vn.techzone.khieu.dto.request.user.UpdatePasswordDTO;
 import vn.techzone.khieu.dto.request.user.UpdateRoleDTO;
 import vn.techzone.khieu.dto.response.PageResponseDTO;
 import vn.techzone.khieu.dto.response.user.ResUserDTO;
+import vn.techzone.khieu.entity.User;
 import vn.techzone.khieu.service.UserService;
 import vn.techzone.khieu.utils.SecurityUtil;
 import vn.techzone.khieu.utils.annotation.ApiMessage;
@@ -41,9 +45,9 @@ public class UserController {
     public ResponseEntity<PageResponseDTO<ResUserDTO>> getAllUsers(
             @RequestParam(value = "current", defaultValue = "1") int current,
             @RequestParam(value = "pageSize", defaultValue = "10") int pageSize,
-            @RequestParam(value = "keyword", required = false) String keyword) {
+            @Filter Specification<User> spec) {
         Pageable pageable = PageRequest.of(current - 1, pageSize, Sort.by(Sort.Direction.ASC, "id"));
-        PageResponseDTO<ResUserDTO> users = this.userService.getAllUsers(pageable, keyword);
+        PageResponseDTO<ResUserDTO> users = this.userService.getAllUsers(pageable, spec);
         return ResponseEntity.ok(users);
     }
 

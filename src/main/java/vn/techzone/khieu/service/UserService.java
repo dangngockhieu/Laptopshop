@@ -18,7 +18,6 @@ import vn.techzone.khieu.dto.response.user.ResUserDTO;
 import vn.techzone.khieu.entity.User;
 import vn.techzone.khieu.mapper.UserMapper;
 import vn.techzone.khieu.repository.UserRepository;
-import vn.techzone.khieu.utils.GenericSpecification;
 import vn.techzone.khieu.utils.error.FailRequestException;
 import vn.techzone.khieu.utils.error.NotFindException;
 
@@ -37,14 +36,7 @@ public class UserService {
         return this.userRepository.findByEmail(email);
     }
 
-    public PageResponseDTO<ResUserDTO> getAllUsers(Pageable pageable, String keyword) {
-        Specification<User> spec = GenericSpecification.<User>equal("verified", true);
-
-        if (keyword != null && !keyword.isBlank()) {
-            spec = spec.and(
-                    GenericSpecification.<User>like("email", keyword)
-                            .or(GenericSpecification.<User>like("name", keyword)));
-        }
+    public PageResponseDTO<ResUserDTO> getAllUsers(Pageable pageable, Specification<User> spec) {
         Page<User> userPage = userRepository.findAll(spec, pageable);
         List<ResUserDTO> users = userPage.getContent().stream()
                 .map(userMapper::toResUserDTO)

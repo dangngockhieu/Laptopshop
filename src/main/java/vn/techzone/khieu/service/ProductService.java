@@ -41,7 +41,6 @@ import vn.techzone.khieu.mapper.ProductMapper;
 import vn.techzone.khieu.repository.ProductImageRepository;
 import vn.techzone.khieu.repository.ProductRepository;
 import vn.techzone.khieu.repository.ReviewRepository;
-import vn.techzone.khieu.utils.GenericSpecification;
 import vn.techzone.khieu.utils.error.FailRequestException;
 import vn.techzone.khieu.utils.error.NotFindException;
 import vn.techzone.khieu.utils.error.StorageException;
@@ -101,23 +100,7 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponseDTO<ResProductDTO> getAllProducts(Pageable pageable, String keyword, String category,
-            String factory) {
-        if (category == null || category.isBlank()) {
-            throw new IllegalArgumentException("Category is required");
-        }
-
-        // Build spec
-        Specification<Product> spec = GenericSpecification.equal("category", category);
-
-        if (keyword != null && !keyword.isBlank()) {
-            spec = spec.and(GenericSpecification.like("name", keyword));
-        }
-
-        if (factory != null && !factory.isBlank() && !factory.equalsIgnoreCase("ALL")) {
-            spec = spec.and(GenericSpecification.equal("factory", factory));
-        }
-
+    public PageResponseDTO<ResProductDTO> getAllProducts(Pageable pageable, Specification<Product> spec) {
         // Bước 1: pagination đúng trong SQL
         Page<Product> productPage = productRepository.findAll(spec, pageable);
         List<Long> ids = productPage.getContent()
