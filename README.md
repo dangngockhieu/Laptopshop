@@ -2,6 +2,8 @@
 
 A mini e-commerce platform for buying laptops, built with Spring Boot and React.
 
+Frontend repository: [Frontend-laptopshop](https://github.com/dangngockhieu/Frontend-laptopshop)
+
 ---
 
 ## 📘 Overview
@@ -32,8 +34,8 @@ This version was re-implemented using Spring Boot to achieve:
 
 This project was developed in two main phases to experiment with and optimize the backend architecture:
 
-- **Phase 1 (10/2025 – 12/2025):** Built the complete MVP (Minimum Viable Product) using **Node.js**. The focus was on rapid development and delivering core e-commerce functionalities.
-- **Phase 2 (02/2026 – 03/2026):** Successfully migrated the entire backend system to **Spring Boot**.
+- **Phase 1 :** Built the complete MVP (Minimum Viable Product) using **Node.js**. The focus was on rapid development and delivering core e-commerce functionalities.
+- **Phase 2 :** Successfully migrated the entire backend system to **Spring Boot**.
   - **Why Migrate?** To apply strict Object-Oriented Programming (OOP) principles, enhance system scalability, and leverage the Spring ecosystem for better transaction management and security.
   - **Result:** The system is now restructured with a Layered Architecture, making the codebase more maintainable and optimizing query performance with PostgreSQL.
 
