@@ -29,7 +29,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import vn.techzone.khieu.dto.request.product.CreateProductDTO;
-import vn.techzone.khieu.dto.request.product.FilterProductDTO;
 import vn.techzone.khieu.dto.request.product.ProductFeatureDTO;
 import vn.techzone.khieu.dto.request.product.UpdateProductDTO;
 import vn.techzone.khieu.dto.request.review.CreateReviewDTO;
@@ -133,13 +132,11 @@ public class ProductController {
         return ResponseEntity.ok(this.productService.getTopProductsCategory(category));
     }
 
-    @PostMapping("/filter")
+    @GetMapping("/filter")
     @RateLimit(capacity = 5, minutes = 1)
     @ApiMessage("Filter products by multiple criteria")
-    public ResponseEntity<FilterProductResponseDTO> filterProducts(
-            @Valid @RequestBody FilterProductDTO filterProductDTO) {
-        FilterProductResponseDTO response = this.productService
-                .filterProducts(filterProductDTO);
+    public ResponseEntity<FilterProductResponseDTO> filterProducts(@Filter Specification<Product> spec) {
+        FilterProductResponseDTO response = this.productService.filterProducts(spec);
         return ResponseEntity.ok(response);
     }
 

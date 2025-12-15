@@ -5,23 +5,20 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import jakarta.persistence.Query;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import vn.techzone.khieu.dto.request.product.CreateProductDTO;
-import vn.techzone.khieu.dto.request.product.FilterProductDTO;
 import vn.techzone.khieu.dto.request.product.ProductFeatureDTO;
 import vn.techzone.khieu.dto.request.product.UpdateProductDTO;
 import vn.techzone.khieu.dto.response.PageResponseDTO;
@@ -37,6 +34,7 @@ import vn.techzone.khieu.dto.response.product.ResBestSeller;
 import vn.techzone.khieu.dto.response.product.ResCardProductDTO;
 import vn.techzone.khieu.entity.Product;
 import vn.techzone.khieu.entity.ProductImage;
+import vn.techzone.khieu.entity.Review;
 import vn.techzone.khieu.mapper.ProductMapper;
 import vn.techzone.khieu.repository.ProductImageRepository;
 import vn.techzone.khieu.repository.ProductRepository;
@@ -51,7 +49,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class ProductService {
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
-    private final EntityManager entityManager;
     private final FileService fileService;
     private final ReviewRepository reviewRepository;
     private final ProductImageRepository productImageRepository;
@@ -275,175 +272,61 @@ public class ProductService {
         productRepository.deleteFeatures(productId, featureId);
     }
 
-    public FilterProductResponseDTO filterProducts(FilterProductDTO filter) {
+    public FilterProductResponseDTO filterProducts(Specification<Product> spec) {
+        Specification<Product> quantitySpec = (root, query, cb) -> cb.greaterThan(root.get("quantity"), 0);
+        List<Product> productList = productRepository.findAll(spec.and(quantitySpec),
+                Sort.by(Sort.Direction.DESC, "sold"));
 
-        // ===== PRODUCTS QUERY =====
-        StringBuilder sql = new StringBuilder("""
-                SELECT p.id, p.name,
-                    p.original_price AS originalPrice,
-                    p.price, p.coupon,
-                    COALESCE(ROUND(CAST(rv.avgRating AS numeric), 2), 0) AS avgRating,
-                    COALESCE(rv.totalReviews, 0) AS totalReviews,
-                    img.url AS imageUrl
-                FROM products p
+        List<ResCardProductDTO> products = productList.stream()
+                .map(this::toResCardProductDTO)
+                .collect(Collectors.toList());
 
-                LEFT JOIN (
-                    SELECT product_id,
-                           AVG(rating) AS avgRating,
-                           COUNT(*) AS totalReviews
-                    FROM reviews
-                    GROUP BY product_id
-                ) rv ON p.id = rv.product_id
+        return new FilterProductResponseDTO(products, products.size());
+    }
 
-                LEFT JOIN (
-                    SELECT DISTINCT ON (product_id)
-                        product_id,
-                        url
-                    FROM product_images
-                    ORDER BY product_id, id
-                ) img ON p.id = img.product_id
+    private ResCardProductDTO toResCardProductDTO(Product product) {
+        List<Integer> ratings = product.getReviews().stream()
+                .map(Review::getRating)
+                .collect(Collectors.toList());
+        double avgRating = ratings.isEmpty() ? 0.0
+                : ratings.stream().mapToInt(Integer::intValue).average().orElse(0.0);
+        String imageUrl = product.getImages().stream()
+                .findFirst()
+                .map(ProductImage::getUrl)
+                .orElse(null);
 
-                WHERE p.quantity > 0
-                """);
-
-        Map<String, Object> params = new HashMap<>();
-        buildFilters(sql, filter, params);
-        sql.append(" ORDER BY p.sold DESC");
-
-        Query query = entityManager.createNativeQuery(sql.toString());
-        params.forEach(query::setParameter);
-
-        @SuppressWarnings("unchecked")
-        List<Object[]> rawRows = query.getResultList();
-
-        List<ResCardProductDTO> products = rawRows.stream().map(row -> new ResCardProductDTO() {
+        return new ResCardProductDTO() {
             public Long getId() {
-                return ((Number) row[0]).longValue();
+                return product.getId();
             }
 
             public String getName() {
-                return (String) row[1];
+                return product.getName();
             }
 
             public Integer getOriginalPrice() {
-                return row[2] != null ? ((Number) row[2]).intValue() : null;
+                return product.getOriginalPrice();
             }
 
             public Integer getPrice() {
-                return row[3] != null ? ((Number) row[3]).intValue() : null;
+                return product.getPrice();
             }
 
             public Integer getCoupon() {
-                return row[4] != null ? ((Number) row[4]).intValue() : null;
+                return product.getCoupon();
             }
 
             public Double getAvgRating() {
-                return row[5] != null ? ((Number) row[5]).doubleValue() : null;
+                return Math.round(avgRating * 100.0) / 100.0;
             }
 
             public Long getTotalReviews() {
-                return row[6] != null ? ((Number) row[6]).longValue() : null;
+                return (long) ratings.size();
             }
 
             public String getImageUrl() {
-                return (String) row[7];
+                return imageUrl;
             }
-        }).collect(Collectors.toList());
-
-        // ===== COUNT QUERY =====
-        StringBuilder countSql = new StringBuilder("""
-                SELECT COUNT(DISTINCT p.id)
-                FROM products p
-                WHERE p.quantity > 0
-                """);
-
-        Map<String, Object> countParams = new HashMap<>();
-        buildFilters(countSql, filter, countParams);
-
-        Query countQuery = entityManager.createNativeQuery(countSql.toString());
-        countParams.forEach(countQuery::setParameter);
-        Object countResult = countQuery.getSingleResult();
-        long count = countResult instanceof Number ? ((Number) countResult).longValue() : 0L;
-
-        return new FilterProductResponseDTO(products, count);
-    }
-
-    private void buildFilters(StringBuilder sql, FilterProductDTO filter, Map<String, Object> params) {
-        if (filter.getCategory() != null && !filter.getCategory().isEmpty()) {
-            sql.append(" AND p.category = :category");
-            params.put("category", filter.getCategory());
-        }
-
-        addInCondition(sql, params, filter.getFactories(),
-                "p.factory IN (:factories)", "factories");
-
-        addInCondition(sql, params, filter.getProductFeatures(),
-                "EXISTS (SELECT 1 FROM product_features pf WHERE pf.product_id = p.id AND pf.feature_id IN (:productFeatures))",
-                "productFeatures");
-
-        if (filter.getMinPrice() != null) {
-            sql.append(" AND p.price >= :minPrice");
-            params.put("minPrice", filter.getMinPrice());
-        }
-
-        if (filter.getMaxPrice() != null) {
-            sql.append(" AND p.price <= :maxPrice");
-            params.put("maxPrice", filter.getMaxPrice());
-        }
-
-        addLikeFilter(sql, params, "p.cpu", "cpu", filter.getCpu());
-        addLikeFilter(sql, params, "p.ram", "ram", filter.getRam());
-        addLikeFilter(sql, params, "p.graphics_card", "gpu", filter.getGpu());
-        addLikeFilter(sql, params, "p.storage", "storage", filter.getStorage());
-        addLikeFilter(sql, params, "p.screen", "screen", filter.getScreen());
-        addLikeFilter(sql, params, "p.screen", "screenSize", filter.getScreenSize());
-
-        handleBatteryFilter(sql, params, filter.getBattery());
-    }
-
-    private void addInCondition(StringBuilder sql, Map<String, Object> params,
-            List<?> values, String clause, String paramKey) {
-        if (values != null && !values.isEmpty()) {
-            sql.append(" AND ").append(clause);
-            params.put(paramKey, values);
-        }
-    }
-
-    private void addLikeFilter(StringBuilder sql, Map<String, Object> params,
-            String column, String paramPrefix, List<String> values) {
-        if (values == null || values.isEmpty() || values.contains("ALL"))
-            return;
-
-        sql.append(" AND (");
-        for (int i = 0; i < values.size(); i++) {
-            String paramKey = paramPrefix + i;
-            sql.append("LOWER(").append(column).append(") LIKE LOWER(:").append(paramKey).append(")");
-            if (i < values.size() - 1)
-                sql.append(" OR ");
-            params.put(paramKey, "%" + values.get(i) + "%");
-        }
-        sql.append(")");
-    }
-
-    private void handleBatteryFilter(StringBuilder sql, Map<String, Object> params, List<String> batteries) {
-        if (batteries == null || batteries.isEmpty() || batteries.contains("ALL"))
-            return;
-
-        sql.append(" AND (");
-        for (int i = 0; i < batteries.size(); i++) {
-            String minKey = "batteryMin" + i;
-            String maxKey = "batteryMax" + i;
-
-            sql.append("(substring(p.battery from '[0-9]+')::int >= :").append(minKey)
-                    .append(" AND substring(p.battery from '[0-9]+')::int < :").append(maxKey).append(")");
-
-            if (i < batteries.size() - 1)
-                sql.append(" OR ");
-
-            int num = Integer.parseInt(batteries.get(i).replaceAll("\\D", ""));
-            params.put(minKey, num);
-            params.put(maxKey, num + 1000);
-        }
-        sql.append(")");
+        };
     }
 }
