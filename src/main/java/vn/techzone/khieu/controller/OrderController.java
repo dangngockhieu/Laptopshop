@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.service.annotation.GetExchange;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -64,7 +63,7 @@ public class OrderController {
         return ResponseEntity.ok().build();
     }
 
-    @GetExchange("/pending")
+    @GetMapping("/pending")
     @PreAuthorize("hasRole('ADMIN')")
     @ApiMessage("Lấy danh sách đơn hàng đang chờ xử lý")
     public ResponseEntity<PageResponseDTO<ResOrderDTO>> getOrdersPending(
@@ -74,7 +73,7 @@ public class OrderController {
         return ResponseEntity.ok(orderService.getOrdersPending(pageable));
     }
 
-    @GetExchange("/status")
+    @GetMapping("/status")
     @PreAuthorize("hasRole('ADMIN')")
     @ApiMessage("Lấy danh sách đơn hàng theo trạng thái")
     public ResponseEntity<PageResponseDTO<ResOrderDTO>> getOrdersStatus(

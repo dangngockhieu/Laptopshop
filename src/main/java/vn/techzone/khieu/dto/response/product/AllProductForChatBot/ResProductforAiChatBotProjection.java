@@ -1,5 +1,8 @@
 package vn.techzone.khieu.dto.response.product.AllProductForChatBot;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Database projection for product data used by AI chatbot")
 public interface ResProductforAiChatBotProjection {
     Long getId();
 

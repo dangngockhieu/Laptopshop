@@ -2,6 +2,7 @@ package vn.techzone.khieu.dto.response.product.AllProductForChatBot;
 
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,9 +12,12 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(description = "Product data prepared for AI chatbot context")
 public class ResProductforAiChatBotDTO {
 
+    @Schema(description = "Product id", example = "1")
     private Long id;
+    @Schema(description = "Product name", example = "MacBook Pro 14 M3")
     private String name;
     private Integer originalPrice;
     private Integer price;
@@ -33,5 +37,6 @@ public class ResProductforAiChatBotDTO {
     private String category;
     private String factory;
     private String imageUrl;
+    @Schema(description = "Feature names linked to the product")
     private List<String> features;
 }

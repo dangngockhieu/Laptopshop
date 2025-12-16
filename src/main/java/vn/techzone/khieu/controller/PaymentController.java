@@ -55,6 +55,7 @@ public class PaymentController {
     }
 
     @GetMapping("/return")
+    @ApiMessage("Handle VNPay payment return callback")
     public void vnpayReturn(HttpServletRequest request,
             HttpServletResponse response) throws IOException {
         paymentService.handleReturn(request, response);

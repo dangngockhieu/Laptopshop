@@ -72,6 +72,7 @@ public class ProductController {
 
     @PostMapping("/upload-excel")
     @PreAuthorize("hasRole('ADMIN')")
+    @ApiMessage("Import products from an Excel file")
     public ResponseEntity<ResStringDTO> uploadExcel(@RequestParam("excel") MultipartFile file) {
         // Kiểm tra file trống
         if (file.isEmpty()) {

@@ -1,5 +1,8 @@
 package vn.techzone.khieu.dto.response.product.ProductDetailDTO;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Product detail projection")
 public interface ResProductDetail {
     Long getId();
 
