@@ -68,10 +68,12 @@ public class SecurityConfiguration {
                                                                 .anyRequest().authenticated())
                                 .oauth2ResourceServer(oauth2 -> oauth2
                                                 .jwt(jwt -> jwt
-                                                                .jwtAuthenticationConverter(jwtAuthenticationConverter)))
+                                                                .jwtAuthenticationConverter(
+                                                                                jwtAuthenticationConverter)))
                                 .exceptionHandling(
                                                 exceptions -> exceptions
-                                                                .authenticationEntryPoint(customAuthenticationEntryPoint) // 401
+                                                                .authenticationEntryPoint(
+                                                                                customAuthenticationEntryPoint) // 401
                                                                 .accessDeniedHandler(customAccessDeniedHandler)) // 403
                                 .formLogin(f -> f.disable())
                                 .sessionManagement(session -> session
