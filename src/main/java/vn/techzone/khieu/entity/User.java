@@ -39,12 +39,11 @@ public class User {
     @NotEmpty(message = "Password cannot be empty")
     private String password;
 
-    @Column(length = 100)
     @NotEmpty(message = "Role cannot be empty")
     private String role;
 
-    @NotEmpty(message = "IsVerified cannot be empty")
-    private Boolean isVerified = false;
+    @Column(name = "verified")
+    private Boolean verified = false;
 
     private String refreshToken;
 
