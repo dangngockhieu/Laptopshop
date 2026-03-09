@@ -24,7 +24,7 @@ public class ChatMessage {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
     @Column(columnDefinition = "TEXT")
     @NotEmpty(message = "Content cannot be empty")

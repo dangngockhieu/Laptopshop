@@ -22,7 +22,7 @@ public class Feature {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
     @NotEmpty(message = "Name cannot be empty")
     private String name;
