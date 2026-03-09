@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import vn.techzone.khieu.dto.request.user.CreateUserDTO;
 import vn.techzone.khieu.entity.User;
 import vn.techzone.khieu.repository.UserRepository;
+import vn.techzone.khieu.service.error.NotFoundUserException;
 
 @Service
 @RequiredArgsConstructor
@@ -23,7 +24,7 @@ public class UserService {
 
     public User findUserByEmail(String email) {
         return this.userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy User với email: " + email));
+                .orElseThrow(() -> new NotFoundUserException("Không tìm thấy User với email: " + email));
     }
 
     public List<User> getAllUsers() {
@@ -32,7 +33,7 @@ public class UserService {
 
     public User getUserById(long id) {
         return this.userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy User với ID: " + id));
+                .orElseThrow(() -> new NotFoundUserException("Không tìm thấy User với ID: " + id));
     }
 
     public User handleCreateUser(CreateUserDTO userDTO) {
