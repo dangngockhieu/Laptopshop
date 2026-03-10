@@ -2,6 +2,7 @@ package vn.techzone.khieu.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -24,15 +25,10 @@ public class SecurityConfiguration {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(
                         authz -> authz
-                                .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
-                                // (Tùy chọn) Mở cửa cho trang chủ hoặc các tài liệu API (Swagger)
+                                .requestMatchers("/", "/api/auth/login", "/api/auth/register").permitAll()
                                 .requestMatchers("/").permitAll()
-                                // 2. Tạm thời mở hết để Dev, sau này test JWT xong thì bạn bật dòng
-                                // authenticated() lên
-                                .anyRequest().permitAll()
-                // .anyRequest().authenticated()
-
-                )
+                                .anyRequest().authenticated())
+                .oauth2ResourceServer((oauth2) -> oauth2.jwt(Customizer.withDefaults()))
                 .formLogin(f -> f.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
