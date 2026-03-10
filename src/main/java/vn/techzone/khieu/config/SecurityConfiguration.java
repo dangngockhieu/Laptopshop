@@ -24,9 +24,13 @@ public class SecurityConfiguration {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(
                         authz -> authz
+                                .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
+                                // (Tùy chọn) Mở cửa cho trang chủ hoặc các tài liệu API (Swagger)
                                 .requestMatchers("/").permitAll()
-                                // .anyRequest().authenticated()
+                                // 2. Tạm thời mở hết để Dev, sau này test JWT xong thì bạn bật dòng
+                                // authenticated() lên
                                 .anyRequest().permitAll()
+                // .anyRequest().authenticated()
 
                 )
                 .formLogin(f -> f.disable())
