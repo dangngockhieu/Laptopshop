@@ -16,32 +16,38 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableMethodSecurity(securedEnabled = true)
 public class SecurityConfiguration {
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8();
-    }
+        @Bean
+        public PasswordEncoder passwordEncoder() {
+                return Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8();
+        }
 
-    @Bean
-    public SecurityFilterChain filterChain(
-            HttpSecurity http,
-            CustomAuthenticationEntryPoint customAuthenticationEntryPoint) throws Exception {
-        http
-                .csrf(csrf -> csrf.disable())
-                .cors(Customizer.withDefaults())
-                .authorizeHttpRequests(
-                        authz -> authz
-                                .requestMatchers("/", "/api/auth/login", "/api/auth/register").permitAll()
-                                .requestMatchers("/").permitAll()
-                                .anyRequest().authenticated())
-                .oauth2ResourceServer((oauth2) -> oauth2.jwt(Customizer.withDefaults())
-                        .authenticationEntryPoint(customAuthenticationEntryPoint))
-                .exceptionHandling(
-                        exceptions -> exceptions
-                                .authenticationEntryPoint(new BearerTokenAuthenticationEntryPoint()) // 401
-                                .accessDeniedHandler(new BearerTokenAccessDeniedHandler()))
-                .formLogin(f -> f.disable())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+        @Bean
+        public SecurityFilterChain filterChain(
+                        HttpSecurity http,
+                        CustomAuthenticationEntryPoint customAuthenticationEntryPoint) throws Exception {
+                http
+                                .csrf(csrf -> csrf.disable())
+                                .cors(Customizer.withDefaults())
+                                .authorizeHttpRequests(
+                                                authz -> authz
+                                                                .requestMatchers("/", "/api/auth/login",
+                                                                                "/api/auth/register",
+                                                                                "/api/users")
+                                                                .permitAll()
+                                                                .requestMatchers("/").permitAll()
+                                                                .anyRequest().authenticated())
+                                .oauth2ResourceServer((oauth2) -> oauth2.jwt(Customizer.withDefaults())
+                                                .authenticationEntryPoint(customAuthenticationEntryPoint))
+                                .exceptionHandling(
+                                                exceptions -> exceptions
+                                                                .authenticationEntryPoint(
+                                                                                new BearerTokenAuthenticationEntryPoint()) // 401
+                                                                .accessDeniedHandler(
+                                                                                new BearerTokenAccessDeniedHandler()))
+                                .formLogin(f -> f.disable())
+                                .sessionManagement(session -> session
+                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-        return http.build();
-    }
+                return http.build();
+        }
 }
