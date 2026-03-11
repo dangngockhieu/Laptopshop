@@ -4,13 +4,14 @@ import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
+import org.mapstruct.ReportingPolicy;
 
 import vn.techzone.khieu.dto.request.user.CreateUserDTO;
 import vn.techzone.khieu.dto.request.user.UpdateUserDTO;
 import vn.techzone.khieu.dto.response.user.ResUserDTO;
 import vn.techzone.khieu.entity.User;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface UserMapper {
     User toUser(CreateUserDTO dto);
 

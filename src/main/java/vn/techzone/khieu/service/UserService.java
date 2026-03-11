@@ -4,11 +4,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 import vn.techzone.khieu.dto.request.user.CreateUserDTO;
 import vn.techzone.khieu.dto.request.user.UpdateUserDTO;
+import vn.techzone.khieu.dto.response.PageResponseDTO;
 import vn.techzone.khieu.dto.response.user.ResUserDTO;
 import vn.techzone.khieu.entity.User;
 import vn.techzone.khieu.mapper.UserMapper;
@@ -29,11 +32,18 @@ public class UserService {
         return this.userRepository.findByEmail(email);
     }
 
-    public List<ResUserDTO> getAllUsers() {
-        List<ResUserDTO> users = userRepository.findAll().stream()
-                .map(user -> userMapper.toResUserDTO(user))
+    public PageResponseDTO<ResUserDTO> getAllUsers(Pageable pageable, String keyword) {
+        Page<User> userPage = userRepository.findVerifiedUsers(keyword, pageable);
+        List<ResUserDTO> users = userPage.getContent().stream()
+                .map(userMapper::toResUserDTO)
                 .collect(Collectors.toList());
-        return users;
+
+        return new PageResponseDTO<ResUserDTO>(
+                users,
+                userPage.getTotalElements(),
+                userPage.getTotalPages(),
+                userPage.getNumber() + 1,
+                userPage.getSize());
     }
 
     public ResUserDTO getUserById(long id) {
@@ -45,7 +55,8 @@ public class UserService {
     public ResUserDTO handleCreateUser(CreateUserDTO userDTO) {
         User user = userMapper.toUser(userDTO);
         user.setVerified(true);
-        return this.userMapper.toResUserDTO(user);
+        User savedUser = this.userRepository.save(user);
+        return this.userMapper.toResUserDTO(savedUser);
     }
 
     public ResUserDTO handleUpdateUser(long id, UpdateUserDTO updateUserDTO) {
