@@ -25,6 +25,7 @@ public class UserDetailsCustom implements UserDetailsService {
                 user.getEmail(),
                 user.getName(),
                 user.getRole(),
+                // Spring lấy password ở đây để so sánh với password người dùng nhập vào
                 user.getPassword(),
                 user.getVerified());
     }

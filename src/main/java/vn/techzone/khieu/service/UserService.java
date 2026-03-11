@@ -16,6 +16,7 @@ import vn.techzone.khieu.dto.response.user.ResUserDTO;
 import vn.techzone.khieu.entity.User;
 import vn.techzone.khieu.mapper.UserMapper;
 import vn.techzone.khieu.repository.UserRepository;
+import vn.techzone.khieu.utils.SecurityUtil;
 import vn.techzone.khieu.utils.error.NotFoundUserException;
 
 @Service
@@ -71,10 +72,20 @@ public class UserService {
         this.userRepository.deleteById(id);
     }
 
-    public void updateUserToken(String email, String refresh_token) {
+    public Optional<User> findByEmailAndRefreshToken(String email, String refreshToken) {
+        String hashed = SecurityUtil.hashWithSHA256(refreshToken);
+        return this.userRepository.findByEmailAndRefreshToken(email, hashed);
+    }
+
+    public void updateUserToken(String email, String refreshToken) {
         User user = this.userRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundUserException("Không tìm thấy User với email: " + email));
-        user.setRefresh_token(refresh_token);
+        if (refreshToken == null) {
+            user.setRefreshToken(null);
+        } else {
+            String hashedToken = SecurityUtil.hashWithSHA256(refreshToken);
+            user.setRefreshToken(hashedToken);
+        }
         this.userRepository.save(user);
     }
 

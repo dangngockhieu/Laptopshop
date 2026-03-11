@@ -17,6 +17,7 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfiguration {
 
         @Bean
+        // Config PasswordEncoder
         public PasswordEncoder passwordEncoder() {
                 return Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8();
         }
@@ -30,7 +31,8 @@ public class SecurityConfiguration {
                                 .cors(Customizer.withDefaults())
                                 .authorizeHttpRequests(
                                                 authz -> authz
-                                                                .requestMatchers("/", "/api/auth/login",
+                                                                .requestMatchers("/api/auth/login",
+                                                                                "/api/auth/refresh",
                                                                                 "/api/auth/register",
                                                                                 "/api/users")
                                                                 .permitAll()

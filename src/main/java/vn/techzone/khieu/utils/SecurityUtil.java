@@ -1,8 +1,17 @@
 package vn.techzone.khieu.utils;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import com.nimbusds.jose.util.Base64;
+import java.util.List;
 import java.util.Optional;
+
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
@@ -15,6 +24,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.stereotype.Service;
 
 import vn.techzone.khieu.dto.response.user.ResLoginDTO;
@@ -30,23 +40,29 @@ public class SecurityUtil {
 
     public static final MacAlgorithm JWT_ALGORITHM = MacAlgorithm.HS512;
 
+    @Value("${jwt.base64-secret}")
+    private String jwtKey;
+
     @Value("${access-token-validity-in-seconds}")
     private long accessTokenExpired;
 
     @Value("${refresh-token-validity-in-seconds}")
     private long refreshTokenExpired;
 
-    public String createAccessToken(Authentication authentication, ResLoginDTO.UserInfo dto) {
+    public String createAccessToken(String email, ResLoginDTO.UserInfo dto) {
         Instant now = Instant.now();
 
         Instant validity = now.plus(this.accessTokenExpired, ChronoUnit.SECONDS);
 
+        List<String> listAuthority = new ArrayList<>();
+        listAuthority.add(dto.getRole());
         // @formatter:off
         JwtClaimsSet claims = JwtClaimsSet.builder ()
             .issuedAt(now)
             .expiresAt(validity)
-            .subject (authentication.getName())
+            .subject (email)
             .claim ("user", dto)
+            .claim("permissions", listAuthority)
             .build();
         JwsHeader jwsHeader = JwsHeader.with(JWT_ALGORITHM).build();
         return this.jwtEncoder.encode(JwtEncoderParameters.from(jwsHeader, claims)).getTokenValue();
@@ -54,10 +70,8 @@ public class SecurityUtil {
 
     public String createRefreshToken(String email, ResLoginDTO dto) {
         Instant now = Instant.now();
-
+ 
         Instant validity = now.plus(this.refreshTokenExpired, ChronoUnit.SECONDS);
-
-        
 
         // @formatter:off
         JwtClaimsSet claims = JwtClaimsSet.builder ()
@@ -70,7 +84,31 @@ public class SecurityUtil {
         return this.jwtEncoder.encode(JwtEncoderParameters.from(jwsHeader, claims)).getTokenValue();
     }
 
-    
+    private SecretKey getSecretKey() {
+        byte[] keyBytes = Base64.from(jwtKey).decode();
+        return new SecretKeySpec(keyBytes, 0, keyBytes.length, JWT_ALGORITHM.getName());
+    }
+
+    public Jwt checkValidToken(String token) {
+        NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withSecretKey(
+                getSecretKey()).macAlgorithm(JWT_ALGORITHM).build();
+            try {
+                return jwtDecoder.decode(token);
+            } catch (Exception e) {
+                System.out.println(">>> RefreshToken error: " + e.getMessage());
+                throw e;
+            }
+    }
+
+    public static String hashWithSHA256(String token) {
+    try {
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        byte[] hash = digest.digest(token.getBytes(StandardCharsets.UTF_8));
+        return java.util.Base64.getEncoder().encodeToString(hash);
+    } catch (NoSuchAlgorithmException e) {
+        throw new RuntimeException("SHA-256 not supported", e);
+    }
+}
 
     /**
      * Get the login of the current user.
