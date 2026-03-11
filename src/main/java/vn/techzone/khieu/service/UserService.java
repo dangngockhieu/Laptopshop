@@ -70,4 +70,12 @@ public class UserService {
     public void handleDeleteUser(long id) {
         this.userRepository.deleteById(id);
     }
+
+    public void updateUserToken(String email, String refresh_token) {
+        User user = this.userRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundUserException("Không tìm thấy User với email: " + email));
+        user.setRefresh_token(refresh_token);
+        this.userRepository.save(user);
+    }
+
 }

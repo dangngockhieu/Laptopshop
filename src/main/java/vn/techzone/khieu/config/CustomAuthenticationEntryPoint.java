@@ -12,7 +12,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import tools.jackson.databind.ObjectMapper;
-import vn.techzone.khieu.utils.RestResponse;
+import vn.techzone.khieu.utils.format_response.RestResponse;
 
 @Component
 // Format response khi token ko hợp lệ hoặc đã hết hạn

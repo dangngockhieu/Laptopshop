@@ -1,4 +1,4 @@
-package vn.techzone.khieu.utils;
+package vn.techzone.khieu.utils.format_response;
 
 import lombok.Getter;
 import lombok.Setter;
