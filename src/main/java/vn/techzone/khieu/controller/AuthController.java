@@ -14,7 +14,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import vn.techzone.khieu.dto.request.user.LoginDTO;
 import vn.techzone.khieu.dto.response.user.ResLoginDTO;
+import vn.techzone.khieu.service.user.UserPrincipal;
 import vn.techzone.khieu.utils.SecurityUtil;
+import vn.techzone.khieu.utils.annotation.ApiMessage;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -24,6 +26,7 @@ public class AuthController {
     private final SecurityUtil securityUtil;
 
     @PostMapping("/login")
+    @ApiMessage("Đăng nhập thành công")
     public ResponseEntity<ResLoginDTO> login(@Valid @RequestBody LoginDTO loginDTO) {
         // Nạp input gồm email/password vào Security
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
@@ -35,7 +38,15 @@ public class AuthController {
         SecurityContextHolder.getContext().setAuthentication(authentication);
         // Create a Token
         String access_token = this.securityUtil.createToken(authentication);
-        ResLoginDTO res = ResLoginDTO.builder().access_token(access_token).build();
+        UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
+        ResLoginDTO.UserInfo userInfo = new ResLoginDTO.UserInfo(
+                principal.getId(),
+                principal.getName(),
+                principal.getEmail(),
+                principal.getRole());
+        ResLoginDTO res = new ResLoginDTO();
+        res.setAccess_token(access_token);
+        res.setUser(userInfo);
         return ResponseEntity.ok().body(res);
     }
 }
