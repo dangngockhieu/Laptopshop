@@ -1,5 +1,7 @@
 package vn.techzone.khieu.service;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
@@ -13,7 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
-import vn.techzone.khieu.dto.request.user.CreateUserDTO;
+import vn.techzone.khieu.dto.request.user.RegisterUserDTO;
 import vn.techzone.khieu.dto.request.user.ResetPasswordDTO;
 import vn.techzone.khieu.entity.User;
 import vn.techzone.khieu.mapper.UserMapper;
@@ -57,12 +59,15 @@ public class AuthService {
             throw new BadCredentialsException("Token missing");
         User user = this.userRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundUserException("Không tìm thấy User với email: " + email));
+        System.out.println("Token URL: " + token);
+        System.out.println("Token DB: " + user.getVerificationCode());
+        System.out.println(token.length());
+        System.out.println(user.getVerificationCode().length());
         if (!token.equals(user.getVerificationCode())) {
             throw new IllegalArgumentException("Token không hợp lệ");
         }
 
         if (user.getCodeExpired() == null || Instant.now().isAfter(user.getCodeExpired())) {
-            this.userRepository.delete(user);
             throw new IllegalArgumentException("Token đã hết hạn");
         }
         user.setVerified(true);
@@ -74,21 +79,28 @@ public class AuthService {
 
     // Các phương thức hỗ trợ gửi Email
     private void sendVerifyEmail(User user, String token) {
-        Map<String, String> variables = new HashMap<>();
+        Map<String, Object> variables = new HashMap<>();
         variables.put("name", user.getName());
-        variables.put("verifyUrl", verifyUrl + "?token=" + token + "&email=" + user.getEmail());
-        String html = emailService.loadTemplate("verify.html", variables);
-        emailService.sendEmailFromTemplate(user.getEmail(), "Verify your account", html);
+        variables.put(
+                "verifyUrl",
+                verifyUrl + "?token=" + token + "&email=" + URLEncoder.encode(user.getEmail(), StandardCharsets.UTF_8));
+
+        emailService.sendEmailFromTemplate(
+                user.getEmail(),
+                "Verify your account",
+                "verify",
+                variables);
     }
 
-    public void handleRegister(CreateUserDTO userDTO) {
+    public void handleRegister(RegisterUserDTO userDTO) {
         if (userRepository.existsByEmail(userDTO.getEmail())) {
             throw new IllegalArgumentException("Thông tin gửi lên Không hợp lệ");
         }
         String hashPassword = passwordEncoder.encode(userDTO.getPassword());
         userDTO.setPassword(hashPassword);
-        User user = userMapper.toUser(userDTO);
+        User user = userMapper.toRegisterUser(userDTO);
         user.setVerified(false);
+        user.setRole("USER");
         String token = UUID.randomUUID().toString().replace("-", "");
         user.setVerificationCode(token);
         Instant codeExpired = Instant.now().plus(30, ChronoUnit.MINUTES);
@@ -137,10 +149,15 @@ public class AuthService {
         this.userRepository.save(user);
 
         // Gửi email reset password
-        Map<String, String> variables = new HashMap<>();
+
+        Map<String, Object> variables = new HashMap<>();
         variables.put("name", user.getName());
-        String html = emailService.loadTemplate("resetPassword.html", variables);
-        this.emailService.sendEmailFromTemplate(user.getEmail(), "Reset your password", html);
+
+        emailService.sendEmailFromTemplate(
+                user.getEmail(),
+                "Reset your password",
+                "passwordReset",
+                variables);
     }
 
     public void resetPassword(ResetPasswordDTO dto) {

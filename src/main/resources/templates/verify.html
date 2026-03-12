@@ -99,7 +99,7 @@
 
                     <tr>
                         <td class="content">
-                            <p style="margin:0 0 12px 0;">Chào <strong>${name}</strong>,</p>
+                            <p style="margin:0 0 12px 0;">Chào <strong th:text="${name}">Name</strong>,</p>
 
                             <p style="margin:0 0 18px 0;">
                                 Cảm ơn bạn đã đăng ký tài khoản trên <strong>TechZone</strong>. Vui lòng nhấn nút bên
@@ -107,7 +107,7 @@
                             </p>
 
                             <p style="text-align:center; margin:24px 0;">
-                                <a href="${verifyUrl}" class="btn btn-primary" target="_blank"
+                                <a th:href="${verifyUrl}" class="btn btn-primary" target="_blank"
                                     rel="noopener noreferrer">Xác thực email</a>
                             </p>
 

@@ -53,7 +53,7 @@ public class User {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+7")
     private Instant sentAt;
 
-    @Column(columnDefinition = "CHAR(36)")
+    @Column(length = 36)
     private String verificationCode;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+7")
