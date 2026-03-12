@@ -1,7 +1,12 @@
 package vn.techzone.khieu.controller;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -11,16 +16,22 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import vn.techzone.khieu.dto.request.user.CreateUserDTO;
+import vn.techzone.khieu.dto.request.user.EmailDTO;
 import vn.techzone.khieu.dto.request.user.LoginDTO;
+import vn.techzone.khieu.dto.request.user.ResetPasswordDTO;
 import vn.techzone.khieu.dto.response.user.ResLoginDTO;
 import vn.techzone.khieu.entity.User;
+import vn.techzone.khieu.service.AuthService;
 import vn.techzone.khieu.service.UserService;
 import vn.techzone.khieu.service.user.UserPrincipal;
 import vn.techzone.khieu.utils.SecurityUtil;
@@ -35,6 +46,7 @@ public class AuthController {
         private final UserService userService;
         private final AuthenticationManagerBuilder authenticationManagerBuilder;
         private final SecurityUtil securityUtil;
+        private final AuthService authService;
 
         @Value("${refresh-token-validity-in-seconds}")
         private long refreshTokenExpired;
@@ -65,7 +77,7 @@ public class AuthController {
                 res.setAccessToken(accessToken);
 
                 String refreshToken = this.securityUtil.createRefreshToken(loginDTO.getEmail(), res);
-                this.userService.updateUserToken(loginDTO.getEmail(), refreshToken);
+                this.authService.updateUserToken(loginDTO.getEmail(), refreshToken);
 
                 ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", refreshToken)
                                 .httpOnly(true)
@@ -106,7 +118,7 @@ public class AuthController {
                 Jwt decodedToken = this.securityUtil.checkValidToken(refreshToken);
                 String email = decodedToken.getSubject();
 
-                User currentUser = this.userService.findByEmailAndRefreshToken(email, refreshToken)
+                User currentUser = this.authService.findByEmailAndRefreshToken(email, refreshToken)
                                 .orElseThrow(() -> new UnauthorizedException(
                                                 "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại"));
 
@@ -122,7 +134,7 @@ public class AuthController {
                 res.setAccessToken(accessToken);
 
                 String newRefreshToken = this.securityUtil.createRefreshToken(email, res);
-                this.userService.updateUserToken(email, newRefreshToken);
+                this.authService.updateUserToken(email, newRefreshToken);
 
                 ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", newRefreshToken)
                                 .httpOnly(true)
@@ -142,7 +154,7 @@ public class AuthController {
         public ResponseEntity<Void> handleLogout() {
                 String email = SecurityUtil.getCurrentUserLogin().orElse(null);
                 if (email != null) {
-                        this.userService.updateUserToken(email, null);
+                        this.authService.updateUserToken(email, null);
                 }
                 ResponseCookie deleteCookie = ResponseCookie.from("refreshToken", "")
                                 .httpOnly(true)
@@ -157,4 +169,47 @@ public class AuthController {
 
         }
 
+        @PostMapping("/register")
+        @ApiMessage("Đăng ký")
+        public ResponseEntity<String> register(@Valid @RequestBody CreateUserDTO registerDTO) {
+                this.authService.handleRegister(registerDTO);
+                return ResponseEntity
+                                .ok("Đăng ký thành công! Vui lòng kiểm tra email để xác minh tài khoản trong 30 phút.");
+        }
+
+        @GetMapping("/verify")
+        @ApiMessage("Xác minh tài khoản")
+        public ResponseEntity<String> verifyAccount(@RequestParam String token, @RequestParam String email) {
+                this.authService.verifyToken(token, email);
+                try {
+                        ClassPathResource resource = new ClassPathResource("static/verifySuccess.html");
+                        String html = new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+                        return ResponseEntity.ok()
+                                        .contentType(MediaType.TEXT_HTML)
+                                        .body(html);
+                } catch (IOException e) {
+                        throw new RuntimeException("Failed to load verify success page", e);
+                }
+        }
+
+        @PostMapping("/send-reset-password")
+        @ApiMessage("Gửi email đặt lại mật khẩu")
+        public ResponseEntity<String> sendResetPasswordEmail(@RequestBody EmailDTO emailDTO) {
+                this.authService.sendEmailResetPassword(emailDTO.getEmail());
+                return ResponseEntity.ok("Email đặt lại mật khẩu đã được gửi. Vui lòng kiểm tra hộp thư.");
+        }
+
+        @PatchMapping("/reset-password")
+        @ApiMessage("Đặt lại mật khẩu")
+        public ResponseEntity<String> resetPassword(@Valid @RequestBody ResetPasswordDTO resetPasswordDTO) {
+                this.authService.resetPassword(resetPasswordDTO);
+                return ResponseEntity.ok("Mật khẩu đã được đặt lại thành công!");
+        }
+
+        @PostMapping("/send-verification-email")
+        @ApiMessage("Gửi email xác minh")
+        public ResponseEntity<String> sendVerificationEmail(@RequestBody EmailDTO emailDTO) {
+                this.authService.reSendVerificationEmail(emailDTO.getEmail());
+                return ResponseEntity.ok("Email xác minh đã được gửi. Vui lòng kiểm tra hộp thư.");
+        }
 }

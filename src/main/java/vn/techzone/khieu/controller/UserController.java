@@ -6,9 +6,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -56,7 +56,7 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(user);
     }
 
-    @PutMapping("/change-password")
+    @PatchMapping("/change-password")
     @ApiMessage("Cập nhật mật khẩu người dùng")
     public ResponseEntity<ResUserDTO> updatePasswordUser(@Valid @RequestBody UpdatePasswordDTO updatePasswordDTO) {
         String email = SecurityUtil.getCurrentUserLogin().orElse(null);
@@ -67,7 +67,7 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.OK).body(user);
     }
 
-    @PutMapping("/role/{id}")
+    @PatchMapping("/role/{id}")
     @ApiMessage("Cập nhật quyền hạn người dùng")
     public ResponseEntity<ResUserDTO> updateRoleUser(@PathVariable("id") long id,
             @RequestBody String role) {
