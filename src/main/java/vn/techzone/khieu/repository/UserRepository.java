@@ -17,6 +17,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     boolean existsByEmail(String email);
 
+    long countByIsVerifiedTrue();
+
     @Query("SELECT u FROM User u WHERE u.verified = true " +
             "AND (:keyword IS NULL OR u.email LIKE %:keyword% OR u.name LIKE %:keyword%)")
     Page<User> findVerifiedUsers(@Param("keyword") String keyword, Pageable pageable);
