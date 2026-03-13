@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +18,7 @@ import vn.techzone.khieu.dto.response.user.ResUserDTO;
 import vn.techzone.khieu.entity.User;
 import vn.techzone.khieu.mapper.UserMapper;
 import vn.techzone.khieu.repository.UserRepository;
+import vn.techzone.khieu.utils.GenericSpecification;
 import vn.techzone.khieu.utils.error.NotFoundUserException;
 
 @Service
@@ -35,7 +37,14 @@ public class UserService {
     }
 
     public PageResponseDTO<ResUserDTO> getAllUsers(Pageable pageable, String keyword) {
-        Page<User> userPage = userRepository.findVerifiedUsers(keyword, pageable);
+        Specification<User> spec = GenericSpecification.<User>equal("verified", true);
+
+        if (keyword != null && !keyword.isBlank()) {
+            spec = spec.and(
+                    GenericSpecification.<User>like("email", keyword)
+                            .or(GenericSpecification.<User>like("name", keyword)));
+        }
+        Page<User> userPage = userRepository.findAll(spec, pageable);
         List<ResUserDTO> users = userPage.getContent().stream()
                 .map(userMapper::toResUserDTO)
                 .collect(Collectors.toList());

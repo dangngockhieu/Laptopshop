@@ -1,15 +1,12 @@
 package vn.techzone.khieu.repository;
 
 import java.util.Optional;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import vn.techzone.khieu.entity.User;
 
-public interface UserRepository extends JpaRepository<User, Long> {
+public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificationExecutor<User> {
 
     Optional<User> findByEmail(String email);
 
@@ -18,11 +15,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByEmail(String email);
 
     long countByVerifiedTrue();
-
-    @Query("SELECT u FROM User u WHERE u.verified = true " +
-            "AND (CAST(:keyword AS string) IS NULL " +
-            "OR u.email LIKE CONCAT('%', CAST(:keyword AS string), '%') " +
-            "OR u.name LIKE CONCAT('%', CAST(:keyword AS string), '%'))")
-    Page<User> findVerifiedUsers(@Param("keyword") String keyword, Pageable pageable);
 
 }

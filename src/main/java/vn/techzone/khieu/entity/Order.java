@@ -17,12 +17,13 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "orders", indexes = @Index(name = "idx_orders_userID", columnList = "userID"))
+@Table(name = "orders", indexes = @Index(name = "idx_orders_user_id", columnList = "user_id"))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -32,7 +33,7 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotEmpty(message = "TotalPrice cannot be empty")
+    @NotNull(message = "TotalPrice cannot be empty")
     private Integer totalPrice;
 
     @NotEmpty(message = "RecipientName cannot be empty")
@@ -66,7 +67,7 @@ public class Order {
     private Instant receivedDate;
 
     @ManyToOne
-    @JoinColumn(name = "userID")
+    @JoinColumn(name = "user_id")
     private User user;
 
     @OneToMany(mappedBy = "order")

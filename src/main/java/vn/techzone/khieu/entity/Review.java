@@ -14,13 +14,13 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "reviews", indexes = @Index(name = "idx_reviews_productID", columnList = "productID"))
+@Table(name = "reviews", indexes = @Index(name = "idx_reviews_product_id", columnList = "product_id"))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -30,7 +30,7 @@ public class Review {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotEmpty(message = "Rating cannot be empty")
+    @NotNull(message = "Rating cannot be empty")
     private Integer rating;
 
     @Column(columnDefinition = "TEXT")
@@ -45,10 +45,10 @@ public class Review {
     }
 
     @ManyToOne
-    @JoinColumn(name = "userID")
+    @JoinColumn(name = "user_id")
     private User user;
 
     @ManyToOne
-    @JoinColumn(name = "productID")
+    @JoinColumn(name = "product_id")
     private Product product;
 }

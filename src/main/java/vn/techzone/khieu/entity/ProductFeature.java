@@ -21,12 +21,12 @@ public class ProductFeature {
     private ProductFeatureId id;
 
     @ManyToOne
-    @MapsId("productID")
-    @JoinColumn(name = "productID")
+    @MapsId("productId")
+    @JoinColumn(name = "product_id")
     private Product product;
 
     @ManyToOne
-    @MapsId("featureID")
-    @JoinColumn(name = "featureID")
+    @MapsId("featureId")
+    @JoinColumn(name = "feature_id")
     private Feature feature;
 }
