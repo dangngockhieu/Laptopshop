@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import vn.techzone.khieu.dto.request.product.CreateProductDTO;
+import vn.techzone.khieu.dto.request.product.FilterProductDTO;
 import vn.techzone.khieu.dto.response.PageResponseDTO;
 import vn.techzone.khieu.dto.response.product.ResProductDTO;
 import vn.techzone.khieu.dto.response.product.ResCardProductDTO;
@@ -52,6 +53,13 @@ public class ProductController {
     public ResponseEntity<List<ResCardProductDTO>> getTopProducts(
             @RequestParam(value = "category", required = false) String category) {
         return ResponseEntity.ok(this.productService.getTopProducts(category));
+    }
+
+    @GetMapping("/filter")
+    @ApiMessage("Lọc sản phẩm theo nhiều tiêu chí")
+    public ResponseEntity<List<ResCardProductDTO>> filterProducts(FilterProductDTO filterProductDTO) {
+        List<ResCardProductDTO> products = this.productService.filterProducts(filterProductDTO);
+        return ResponseEntity.ok(products);
     }
 
 }

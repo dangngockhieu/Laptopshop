@@ -15,5 +15,5 @@ public interface ResCardProductDTO {
 
     Long getTotalReviews();
 
-    String getUrlImage();
+    String getImageUrl();
 }
