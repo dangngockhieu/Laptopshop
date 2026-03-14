@@ -8,6 +8,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationEntryPoint;
 import org.springframework.security.oauth2.server.resource.web.access.BearerTokenAccessDeniedHandler;
 import org.springframework.security.web.SecurityFilterChain;
@@ -15,6 +16,12 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 @EnableMethodSecurity(securedEnabled = true)
 public class SecurityConfiguration {
+
+        private final JwtAuthenticationConverter jwtAuthenticationConverter;
+
+        SecurityConfiguration(JwtAuthenticationConverter jwtAuthenticationConverter) {
+                this.jwtAuthenticationConverter = jwtAuthenticationConverter;
+        }
 
         @Bean
         // Config PasswordEncoder
@@ -37,8 +44,11 @@ public class SecurityConfiguration {
                                                                                 "/api/users")
                                                                 .permitAll()
                                                                 .requestMatchers("/").permitAll()
-                                                                .anyRequest().authenticated())
-                                .oauth2ResourceServer((oauth2) -> oauth2.jwt(Customizer.withDefaults())
+                                                                .anyRequest().permitAll())
+                                // .authenticated())
+                                .oauth2ResourceServer(oauth2 -> oauth2
+                                                .jwt(jwt -> jwt
+                                                                .jwtAuthenticationConverter(jwtAuthenticationConverter))
                                                 .authenticationEntryPoint(customAuthenticationEntryPoint))
                                 .exceptionHandling(
                                                 exceptions -> exceptions
