@@ -136,7 +136,7 @@ public class AuthService {
                 .orElseThrow(() -> new NotFoundUserException("Không tìm thấy User với email: " + email));
         if (user.getCodeExpired() != null && Instant.now().isBefore(user.getCodeExpired()))
             throw new BadCredentialsException("Vui lòng gửi lại sau ít phút nữa");
-        if (user.getVerified() == false)
+        if (user.getVerified() != null && !user.getVerified())
             throw new BadCredentialsException("Tài khoản chưa được xác minh, không thể reset password");
         String token = UUID.randomUUID().toString().replace("-", "");
         user.setVerificationCode(token);

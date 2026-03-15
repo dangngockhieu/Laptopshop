@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -12,6 +13,10 @@ import vn.techzone.khieu.entity.Product;
 
 public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
     boolean existsByIdAndQuantityGreaterThan(Long id, Integer quantity);
+
+    @Modifying
+    @Query(value = "UPDATE products SET quantity = quantity - :qty, sold = sold + :qty WHERE id = :id AND quantity >= :qty", nativeQuery = true)
+    int updateQuantityAndSoleCreateOrder(@Param("id") Long id, @Param("qty") Integer qty);
 
     @Query(value = """
                 SELECT p.id, p.name,

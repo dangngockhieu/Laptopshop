@@ -42,7 +42,7 @@ public class CartController {
         return ResponseEntity.ok(numberCart);
     }
 
-    @GetMapping
+    @GetMapping()
     @ApiMessage("Lấy thông tin giỏ hàng")
     public ResponseEntity<List<ResCartDTO>> getCart() {
         Long userId = SecurityUtil.getCurrentUserId();

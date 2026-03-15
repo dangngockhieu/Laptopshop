@@ -7,6 +7,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,6 +19,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import vn.techzone.khieu.dto.request.product.CreateProductDTO;
 import vn.techzone.khieu.dto.request.product.FilterProductDTO;
+import vn.techzone.khieu.dto.request.product.UpdateProductDTO;
 import vn.techzone.khieu.dto.response.PageResponseDTO;
 import vn.techzone.khieu.dto.response.product.ResProductDTO;
 import vn.techzone.khieu.dto.response.product.ResCardProductDTO;
@@ -60,6 +63,14 @@ public class ProductController {
     public ResponseEntity<List<ResCardProductDTO>> filterProducts(FilterProductDTO filterProductDTO) {
         List<ResCardProductDTO> products = this.productService.filterProducts(filterProductDTO);
         return ResponseEntity.ok(products);
+    }
+
+    @PatchMapping("/{id}")
+    @ApiMessage("Cập nhật thông tin sản phẩm")
+    public ResponseEntity<ResProductDTO> updateProduct(@Valid @RequestBody UpdateProductDTO updateProductDTO,
+            @PathVariable Long id) {
+        ResProductDTO product = this.productService.updateProduct(id, updateProductDTO);
+        return ResponseEntity.ok(product);
     }
 
 }
