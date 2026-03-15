@@ -100,15 +100,13 @@ public class CartService {
         }
     }
 
-    public void checkout(Long userId, Long productId) {
-        CartId cartId = new CartId(userId, productId);
-        Optional<Cart> existingCart = cartRepository.findById(cartId);
-        if (existingCart.isPresent()) {
-            Cart cart = existingCart.get();
-            cart.setSelected(false);
-            cartRepository.save(cart);
-        } else {
-            throw new FailRequestException("Sản phẩm không tồn tại trong giỏ hàng");
+    public void checkout(Long userId) {
+        List<Cart> carts = cartRepository.findByIdUserId(userId);
+        for (Cart cart : carts) {
+            if (cart.getSelected() == Boolean.TRUE) {
+                cart.setSelected(false);
+                cartRepository.save(cart);
+            }
         }
     }
 

@@ -21,6 +21,7 @@ import vn.techzone.khieu.entity.User;
 import vn.techzone.khieu.mapper.UserMapper;
 import vn.techzone.khieu.repository.UserRepository;
 import vn.techzone.khieu.utils.SecurityUtil;
+import vn.techzone.khieu.utils.error.FailRequestException;
 import vn.techzone.khieu.utils.error.NotFoundUserException;
 
 @Service
@@ -90,7 +91,7 @@ public class AuthService {
 
     public void handleRegister(RegisterUserDTO userDTO) {
         if (userRepository.existsByEmail(userDTO.getEmail())) {
-            throw new IllegalArgumentException("Thông tin gửi lên Không hợp lệ");
+            throw new FailRequestException("Thông tin gửi lên Không hợp lệ");
         }
         String hashPassword = passwordEncoder.encode(userDTO.getPassword());
         userDTO.setPassword(hashPassword);

@@ -19,6 +19,7 @@ import vn.techzone.khieu.entity.User;
 import vn.techzone.khieu.mapper.UserMapper;
 import vn.techzone.khieu.repository.UserRepository;
 import vn.techzone.khieu.utils.GenericSpecification;
+import vn.techzone.khieu.utils.error.FailRequestException;
 import vn.techzone.khieu.utils.error.NotFoundUserException;
 
 @Service
@@ -64,6 +65,9 @@ public class UserService {
     }
 
     public ResUserDTO handleCreateUserForAdmin(CreateUserDTO userDTO) {
+        if (userRepository.existsByEmail(userDTO.getEmail())) {
+            throw new FailRequestException("Thông tin gửi lên Không hợp lệ");
+        }
         String hashPassword = passwordEncoder.encode(userDTO.getPassword());
         userDTO.setPassword(hashPassword);
         User user = userMapper.toCreateUser(userDTO);

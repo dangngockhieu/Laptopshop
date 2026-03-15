@@ -65,4 +65,20 @@ public class CartController {
         cartService.deleteProductInCart(userId, productIdDTO.getProductId());
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping("/buy-now")
+    @ApiMessage("Buy Now")
+    public ResponseEntity<Void> buyNow(@Valid @RequestBody ProductIdDTO productIdDTO) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        cartService.buyNow(userId, productIdDTO.getProductId());
+        return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping("/checkout")
+    @ApiMessage("Checkout sản phẩm trong giỏ hàng")
+    public ResponseEntity<Void> checkout() {
+        Long userId = SecurityUtil.getCurrentUserId();
+        cartService.checkout(userId);
+        return ResponseEntity.ok().build();
+    }
 }

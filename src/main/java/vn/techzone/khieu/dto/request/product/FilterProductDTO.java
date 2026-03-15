@@ -2,10 +2,12 @@ package vn.techzone.khieu.dto.request.product;
 
 import java.util.List;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
 public class FilterProductDTO {
+    @NotBlank(message = "Category is required")
     String category;
     List<String> factories;
     List<Long> productFeatures;
