@@ -36,6 +36,7 @@ import vn.techzone.khieu.dto.response.product.FilterProductResponseDTO;
 import vn.techzone.khieu.dto.response.product.ResBestSeller;
 import vn.techzone.khieu.dto.response.product.ResCardProductDTO;
 import vn.techzone.khieu.entity.Product;
+import vn.techzone.khieu.service.ProductExcelService;
 import vn.techzone.khieu.service.ProductService;
 import vn.techzone.khieu.utils.SecurityUtil;
 import vn.techzone.khieu.utils.annotation.ApiMessage;
@@ -46,6 +47,7 @@ import vn.techzone.khieu.utils.error.StorageException;
 @RequiredArgsConstructor
 public class ProductController {
     private final ProductService productService;
+    private final ProductExcelService productExcelService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ApiMessage("Tạo mới sản phẩm")
@@ -55,6 +57,32 @@ public class ProductController {
             throws URISyntaxException, IOException, StorageException {
         Product product = this.productService.createProduct(dto, images);
         return ResponseEntity.ok(product);
+    }
+
+    @PostMapping("/upload-excel")
+    public ResponseEntity<ResStringDTO> uploadExcel(@RequestParam("excel") MultipartFile file) {
+        // Kiểm tra file trống
+        if (file.isEmpty()) {
+            return ResponseEntity.badRequest().body(new ResStringDTO("Vui lòng chọn một file excel!"));
+        }
+
+        // Kiểm tra định dạng file (optional)
+        String contentType = file.getContentType();
+        if (contentType == null
+                || (!contentType.equals("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                        && !contentType.equals("application/vnd.ms-excel"))) {
+            return ResponseEntity.badRequest()
+                    .body(new ResStringDTO("Chỉ chấp nhận file định dạng Excel (.xlsx, .xls)"));
+        }
+
+        try {
+            // Gọi service xử lý (Đọc -> Lưu DB -> Xóa file)
+            productExcelService.importFromExcel(file);
+            return ResponseEntity.ok(new ResStringDTO("File excel đã được xử lý thành công!"));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body(new ResStringDTO("Lỗi khi xử lý file: " + e.getMessage()));
+        }
     }
 
     @GetMapping("/products-paginate")
@@ -106,6 +134,13 @@ public class ProductController {
         Long userId = SecurityUtil.getCurrentUserId();
         productService.createReview(userId, createReviewDTO);
         return ResponseEntity.ok(new ResStringDTO("Đánh giá đã được tạo thành công"));
+    }
+
+    @DeleteMapping("/{id}")
+    @ApiMessage("Xóa sản phẩm")
+    public ResponseEntity<ResStringDTO> deleteProduct(@PathVariable Long id) {
+        productService.deleteProduct(id);
+        return ResponseEntity.ok(new ResStringDTO("Sản phẩm đã được xóa thành công"));
     }
 
     @PostMapping(value = "/product-images/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

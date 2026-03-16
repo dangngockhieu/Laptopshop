@@ -46,6 +46,10 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     @Query(value = "DELETE FROM product_features WHERE product_id =:productId AND feature_id=:featureId", nativeQuery = true)
     void deleteFeatures(@Param("productId") Long productId, @Param("featureId") Long featureId);
 
+    @Modifying
+    @Query(value = "DELETE FROM product_features WHERE product_id =:productId", nativeQuery = true)
+    void deleteFeature(@Param("productId") Long productId);
+
     // Update quantity và sold khi tạo đơn hàng
     @Modifying
     @Query(value = "UPDATE products SET quantity = quantity - :qty, sold = sold + :qty WHERE id = :id AND quantity >= :qty", nativeQuery = true)

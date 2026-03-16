@@ -65,10 +65,13 @@ public class ProductService {
     @Transactional
     public Product createProduct(CreateProductDTO dto, List<MultipartFile> images)
             throws URISyntaxException, IOException, StorageException {
-
+        if (dto.getCoupon() == null) {
+            dto.setCoupon(0);
+        }
         Integer price = (int) Math.round(dto.getOriginalPrice() - (dto.getOriginalPrice() * dto.getCoupon() / 100.0));
         Product product = productMapper.toCreateProduct(dto);
         product.setPrice(price);
+        product.setSold(0);
         this.productRepository.save(product);
 
         List<String> uploadedUrls = new ArrayList<>();
@@ -139,6 +142,18 @@ public class ProductService {
 
         fileService.delete(PRODUCT_FOLDER, image.getUrl().substring(image.getUrl().lastIndexOf("/") + 1));
         productImageRepository.deleteById(imageId);
+    }
+
+    private void deleteProductImageByProductId(Long productId) throws StorageException, URISyntaxException {
+        List<ProductImage> images = productImageRepository.findByProductId(productId);
+        if (images.isEmpty()) {
+            throw new FailRequestException("Ảnh không tồn tại");
+        }
+
+        for (ProductImage image : images) {
+            fileService.delete(PRODUCT_FOLDER, image.getUrl().substring(image.getUrl().lastIndexOf("/") + 1));
+            productImageRepository.deleteById(image.getId());
+        }
     }
 
     @Transactional(readOnly = true)
@@ -286,6 +301,22 @@ public class ProductService {
         review.setComment(createReviewDTO.getComment());
 
         reviewRepository.save(review);
+    }
+
+    @Transactional
+    public void deleteProduct(Long id) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new NotFindException("Product not found with id: " + id));
+        if (product.getSold() != null && product.getSold() > 0) {
+            throw new FailRequestException("Cannot delete product that has been sold");
+        }
+        productRepository.deleteFeature(id);
+        try {
+            deleteProductImageByProductId(id);
+        } catch (StorageException | URISyntaxException e) {
+            throw new RuntimeException("Failed to delete product images", e);
+        }
+        productRepository.deleteById(id);
     }
 
     public Long countProducts() {
