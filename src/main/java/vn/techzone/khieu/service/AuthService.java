@@ -22,7 +22,7 @@ import vn.techzone.khieu.mapper.UserMapper;
 import vn.techzone.khieu.repository.UserRepository;
 import vn.techzone.khieu.utils.SecurityUtil;
 import vn.techzone.khieu.utils.error.FailRequestException;
-import vn.techzone.khieu.utils.error.NotFoundUserException;
+import vn.techzone.khieu.utils.error.NotFindException;
 
 @Service
 @RequiredArgsConstructor
@@ -44,7 +44,7 @@ public class AuthService {
 
     public void updateUserToken(String email, String refreshToken) {
         User user = this.userRepository.findByEmail(email)
-                .orElseThrow(() -> new NotFoundUserException("Không tìm thấy User với email: " + email));
+                .orElseThrow(() -> new NotFindException("Không tìm thấy User với email: " + email));
         if (refreshToken == null) {
             user.setRefreshToken(null);
         } else {
@@ -59,7 +59,7 @@ public class AuthService {
         if (token == null)
             throw new BadCredentialsException("Token missing");
         User user = this.userRepository.findByEmail(email)
-                .orElseThrow(() -> new NotFoundUserException("Không tìm thấy User với email: " + email));
+                .orElseThrow(() -> new NotFindException("Không tìm thấy User với email: " + email));
         if (!token.equals(user.getVerificationCode())) {
             throw new IllegalArgumentException("Token không hợp lệ");
         }
@@ -115,7 +115,7 @@ public class AuthService {
         if (email == null)
             throw new BadCredentialsException("Email is required");
         User user = this.userRepository.findByEmail(email)
-                .orElseThrow(() -> new NotFoundUserException("Không tìm thấy User với email: " + email));
+                .orElseThrow(() -> new NotFindException("Không tìm thấy User với email: " + email));
         if (user.getCodeExpired() != null && Instant.now().isBefore(user.getCodeExpired()))
             throw new BadCredentialsException("Vui lòng gửi lại sau ít phút nữa");
         String token = UUID.randomUUID().toString().replace("-", "");
@@ -134,7 +134,7 @@ public class AuthService {
         if (email == null)
             throw new BadCredentialsException("Email is required");
         User user = this.userRepository.findByEmail(email)
-                .orElseThrow(() -> new NotFoundUserException("Không tìm thấy User với email: " + email));
+                .orElseThrow(() -> new NotFindException("Không tìm thấy User với email: " + email));
         if (user.getCodeExpired() != null && Instant.now().isBefore(user.getCodeExpired()))
             throw new BadCredentialsException("Vui lòng gửi lại sau ít phút nữa");
         if (user.getVerified() != null && !user.getVerified())
@@ -163,7 +163,7 @@ public class AuthService {
             throw new IllegalArgumentException("Passwords do not match");
         }
         User user = this.userRepository.findByEmail(dto.getEmail())
-                .orElseThrow(() -> new NotFoundUserException("Không tìm thấy User với email: " + dto.getEmail()));
+                .orElseThrow(() -> new NotFindException("Không tìm thấy User với email: " + dto.getEmail()));
         if (!dto.getCode().equals(user.getVerificationCode())) {
             throw new IllegalArgumentException("Code không hợp lệ");
         }

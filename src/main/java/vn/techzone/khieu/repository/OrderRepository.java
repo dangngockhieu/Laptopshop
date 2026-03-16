@@ -30,6 +30,10 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
                 o.id AS "orderID", o.user_id AS "userID", o.recipient_name AS "recipientName",
                 o.address, o.phone, o.total_price AS "totalPrice",
                 o.status AS "orderStatus", o.order_date AS "orderDate",
+                o.delivery_date as "deliveryDate",
+                o.expected_date as "expectedDate",
+                o.received_date as "receivedDate",
+                o.tracking_code as "trackingCode",
                 p.method AS "paymentMethod", p.status AS "paymentStatus",
                 (SELECT u.email FROM users u WHERE u.id = o.user_id) AS "userEmail"
             FROM orders o
@@ -57,6 +61,10 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
                 o.id AS "orderID", o.user_id AS "userID", o.recipient_name AS "recipientName",
                 o.address, o.phone, o.total_price AS "totalPrice",
                 o.status AS "orderStatus", o.order_date AS "orderDate",
+                o.delivery_date as "deliveryDate",
+                o.expected_date as "expectedDate",
+                o.received_date as "receivedDate",
+                o.tracking_code as "trackingCode",
                 p.method AS "paymentMethod", p.status AS "paymentStatus",
                 (SELECT u.email FROM users u WHERE u.id = o.user_id) AS "userEmail"
             FROM orders o

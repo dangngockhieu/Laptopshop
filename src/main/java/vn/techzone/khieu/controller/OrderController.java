@@ -16,6 +16,7 @@ import org.springframework.web.service.annotation.GetExchange;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import vn.techzone.khieu.dto.request.ProductIdDTO;
 import vn.techzone.khieu.dto.request.order.CreateOrderDTO;
 import vn.techzone.khieu.dto.request.order.UpdateToShippingDTO;
 import vn.techzone.khieu.dto.request.order.UpdateToStatusDTO;
@@ -25,17 +26,21 @@ import vn.techzone.khieu.dto.response.order.ResOrderDTO;
 import vn.techzone.khieu.dto.response.order.ResOrderItemDTO;
 import vn.techzone.khieu.dto.response.order.ResOrderUser.ResOrderUserDTO;
 import vn.techzone.khieu.dto.response.order.ResRevenue.ResRevenueThisMonthDTO;
+import vn.techzone.khieu.dto.response.user.ResStringDTO;
+import vn.techzone.khieu.service.CartService;
 import vn.techzone.khieu.service.OrderService;
 import vn.techzone.khieu.utils.SecurityUtil;
 import vn.techzone.khieu.utils.annotation.ApiMessage;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
 @RestController
 @RequestMapping("/api/orders")
 @RequiredArgsConstructor
 public class OrderController {
     private final OrderService orderService;
+    private final CartService cartService;
 
     @PostMapping()
     @ApiMessage("Tạo đơn hàng mới")
@@ -77,18 +82,20 @@ public class OrderController {
         return ResponseEntity.ok(orderService.getOrderItems(orderId));
     }
 
-    @PatchMapping("/updateToShipping")
+    @PatchMapping("/updateToShipping/{orderId}")
     @ApiMessage("Cập nhật trạng thái đơn hàng sang Đang giao")
-    public ResponseEntity<Void> updateOrderToShipping(@Valid @RequestBody UpdateToShippingDTO dto) {
-        orderService.updatePedingtoShipping(dto);
+    public ResponseEntity<Void> updateOrderToShipping(@Valid @RequestBody UpdateToShippingDTO dto,
+            @PathVariable Long orderId) {
+        orderService.updatePedingtoShipping(orderId, dto);
         return ResponseEntity.ok().build();
     }
 
-    @PatchMapping("/updateStatus")
+    @PatchMapping("/updateToStatus/{orderId}")
     @ApiMessage("Cập nhật trạng thái đơn hàng")
-    public ResponseEntity<Void> updateOrderStatus(@Valid @RequestBody UpdateToStatusDTO dto) {
+    public ResponseEntity<Void> updateOrderStatus(@Valid @RequestBody UpdateToStatusDTO dto,
+            @PathVariable Long orderId) {
         Long userId = SecurityUtil.getCurrentUserId();
-        orderService.updateStatusOrderforUser(userId, dto);
+        orderService.updateStatusOrderforUser(userId, orderId, dto);
         return ResponseEntity.ok().build();
     }
 
@@ -115,5 +122,19 @@ public class OrderController {
     @ApiMessage("Thống kê doanh thu theo tháng trong năm")
     public ResponseEntity<List<Long>> getRevenueByMonth() {
         return ResponseEntity.ok(orderService.getRevenueByMonth());
+    }
+
+    @PostMapping("/buy-again")
+    @ApiMessage("Mua lại đơn hàng")
+    public ResponseEntity<ResStringDTO> buyAgain(@Valid @RequestBody List<ProductIdDTO> productIdDTOs) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        for (ProductIdDTO dto : productIdDTOs) {
+            try {
+                cartService.buyNow(userId, dto.getProductId());
+            } catch (Exception e) {
+                // Bỏ qua sản phẩm lỗi, tiếp tục thêm cái khác
+            }
+        }
+        return ResponseEntity.ok(new ResStringDTO("Buy Again Success"));
     }
 }

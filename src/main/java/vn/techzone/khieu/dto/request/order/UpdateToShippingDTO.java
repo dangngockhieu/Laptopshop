@@ -10,9 +10,6 @@ import lombok.Data;
 
 @Data
 public class UpdateToShippingDTO {
-    @NotNull(message = "Order ID is required")
-    private Long orderId;
-
     @NotBlank(message = "Tracking code is required")
     private String trackingCode;
 

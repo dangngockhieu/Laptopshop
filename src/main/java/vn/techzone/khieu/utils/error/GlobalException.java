@@ -18,8 +18,8 @@ import vn.techzone.khieu.utils.format_response.RestResponse;
 
 @RestControllerAdvice
 public class GlobalException {
-    @ExceptionHandler(value = NotFoundUserException.class)
-    public ResponseEntity<RestResponse<Object>> handleNotFoundUserException(NotFoundUserException ex) {
+    @ExceptionHandler(value = NotFindException.class)
+    public ResponseEntity<RestResponse<Object>> handleNotFoundUserException(NotFindException ex) {
         RestResponse<Object> res = new RestResponse<>();
         res.setStatusCode(HttpStatus.NOT_FOUND.value());
         res.setError(ex.getMessage());

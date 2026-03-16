@@ -1,11 +1,10 @@
 package vn.techzone.khieu.dto.request.order;
 
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
 
 @Data
 public class UpdateToStatusDTO {
-    @NotNull(message = "Order ID is required")
-    private Long orderId;
+    @NotEmpty(message = "Status is required")
     String status;
 }

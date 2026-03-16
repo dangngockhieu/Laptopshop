@@ -148,8 +148,8 @@ public class OrderService {
         return orderItemRepository.findByOrderId(orderId);
     }
 
-    public void updatePedingtoShipping(UpdateToShippingDTO updateToShippingDTO) {
-        Order order = orderRepository.findById(updateToShippingDTO.getOrderId())
+    public void updatePedingtoShipping(Long orderId, UpdateToShippingDTO updateToShippingDTO) {
+        Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new FailRequestException("Đơn hàng không tồn tại"));
 
         if (!order.getStatus().equals("PENDING")) {
@@ -164,8 +164,8 @@ public class OrderService {
     }
 
     @Transactional
-    public void updateStatusOrderforUser(Long userId, UpdateToStatusDTO updateToStatusDTO) {
-        Order order = orderRepository.findById(updateToStatusDTO.getOrderId())
+    public void updateStatusOrderforUser(Long userId, Long orderId, UpdateToStatusDTO updateToStatusDTO) {
+        Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new FailRequestException("Đơn hàng không tồn tại"));
 
         if (!order.getUser().getId().equals(userId)) {

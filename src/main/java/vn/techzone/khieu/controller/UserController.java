@@ -18,12 +18,13 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import vn.techzone.khieu.dto.request.user.CreateUserDTO;
 import vn.techzone.khieu.dto.request.user.UpdatePasswordDTO;
+import vn.techzone.khieu.dto.request.user.UpdateRoleDTO;
 import vn.techzone.khieu.dto.response.PageResponseDTO;
 import vn.techzone.khieu.dto.response.user.ResUserDTO;
 import vn.techzone.khieu.service.UserService;
 import vn.techzone.khieu.utils.SecurityUtil;
 import vn.techzone.khieu.utils.annotation.ApiMessage;
-import vn.techzone.khieu.utils.error.NotFoundUserException;
+import vn.techzone.khieu.utils.error.NotFindException;
 
 @RestController
 @RequestMapping("/api/users")
@@ -61,7 +62,7 @@ public class UserController {
     public ResponseEntity<ResUserDTO> updatePasswordUser(@Valid @RequestBody UpdatePasswordDTO updatePasswordDTO) {
         String email = SecurityUtil.getCurrentUserLogin().orElse(null);
         if (email == null) {
-            throw new NotFoundUserException("Không tìm thấy người dùng hiện tại");
+            throw new NotFindException("Không tìm thấy người dùng hiện tại");
         }
         ResUserDTO user = this.userService.handleUpdatePassword(email, updatePasswordDTO);
         return ResponseEntity.status(HttpStatus.OK).body(user);
@@ -70,8 +71,8 @@ public class UserController {
     @PatchMapping("/role/{id}")
     @ApiMessage("Cập nhật quyền hạn người dùng")
     public ResponseEntity<ResUserDTO> updateRoleUser(@PathVariable("id") long id,
-            @RequestBody String role) {
-        ResUserDTO user = this.userService.handleUpdateRole(id, role);
+            @Valid @RequestBody UpdateRoleDTO updateRoleDTO) {
+        ResUserDTO user = this.userService.handleUpdateRole(id, updateRoleDTO.getRole());
         return ResponseEntity.status(HttpStatus.OK).body(user);
     }
 
