@@ -3,9 +3,11 @@ package vn.techzone.khieu.service;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import jakarta.persistence.Query;
 
@@ -20,6 +22,7 @@ import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import vn.techzone.khieu.dto.request.product.CreateProductDTO;
 import vn.techzone.khieu.dto.request.product.FilterProductDTO;
+import vn.techzone.khieu.dto.request.product.ProductFeatureDTO;
 import vn.techzone.khieu.dto.request.product.UpdateProductDTO;
 import vn.techzone.khieu.dto.request.review.CreateReviewDTO;
 import vn.techzone.khieu.dto.response.PageResponseDTO;
@@ -41,6 +44,7 @@ import vn.techzone.khieu.repository.ProductRepository;
 import vn.techzone.khieu.repository.ReviewRepository;
 import vn.techzone.khieu.repository.UserRepository;
 import vn.techzone.khieu.utils.GenericSpecification;
+import vn.techzone.khieu.utils.error.FailRequestException;
 import vn.techzone.khieu.utils.error.NotFindException;
 import vn.techzone.khieu.utils.error.StorageException;
 import org.springframework.transaction.annotation.Transactional;
@@ -62,7 +66,9 @@ public class ProductService {
     public Product createProduct(CreateProductDTO dto, List<MultipartFile> images)
             throws URISyntaxException, IOException, StorageException {
 
+        Integer price = (int) Math.round(dto.getOriginalPrice() - (dto.getOriginalPrice() * dto.getCoupon() / 100.0));
         Product product = productMapper.toCreateProduct(dto);
+        product.setPrice(price);
         this.productRepository.save(product);
 
         List<String> uploadedUrls = new ArrayList<>();
@@ -94,31 +100,89 @@ public class ProductService {
         return product;
     }
 
+    @Transactional
+    public void addProductImages(Long productId, List<MultipartFile> images)
+            throws URISyntaxException, IOException, StorageException {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new FailRequestException("Sản phẩm không tồn tại"));
+
+        List<String> uploadedUrls = new ArrayList<>();
+        try {
+            if (images != null && !images.isEmpty()) {
+                fileService.createDirectory(PRODUCT_FOLDER);
+                for (MultipartFile image : images) {
+                    String uploadedFileName = fileService.store(image, PRODUCT_FOLDER);
+                    String url = "/storage/" + PRODUCT_FOLDER + "/" + uploadedFileName;
+                    uploadedUrls.add(url);
+
+                    ProductImage productImage = new ProductImage();
+                    productImage.setUrl(url);
+                    productImage.setProduct(product);
+                    productImageRepository.save(productImage);
+                }
+            }
+        } catch (Exception e) {
+            uploadedUrls.forEach(url -> {
+                try {
+                    fileService.delete(PRODUCT_FOLDER, url.substring(url.lastIndexOf("/") + 1));
+                } catch (StorageException | URISyntaxException e1) {
+                    e1.printStackTrace();
+                }
+            });
+            throw e;
+        }
+    }
+
+    public void deleteProductImage(Long imageId) throws StorageException, URISyntaxException {
+        ProductImage image = productImageRepository.findById(imageId)
+                .orElseThrow(() -> new FailRequestException("Ảnh không tồn tại"));
+
+        fileService.delete(PRODUCT_FOLDER, image.getUrl().substring(image.getUrl().lastIndexOf("/") + 1));
+        productImageRepository.deleteById(imageId);
+    }
+
+    @Transactional(readOnly = true)
     public PageResponseDTO<ResProductDTO> getAllProducts(Pageable pageable, String keyword, String category,
             String factory) {
         if (category == null || category.isBlank()) {
             throw new IllegalArgumentException("Category is required");
         }
-        Specification<Product> spec = null;
 
-        Specification<Product> categorySpec = GenericSpecification.equal("category", category);
-        spec = spec == null ? categorySpec : spec.and(categorySpec);
+        // Build spec
+        Specification<Product> spec = GenericSpecification.equal("category", category);
 
         if (keyword != null && !keyword.isBlank()) {
-            Specification<Product> nameSpec = GenericSpecification.like("name", keyword);
-            spec = spec == null ? nameSpec : spec.and(nameSpec);
+            spec = spec.and(GenericSpecification.like("name", keyword));
         }
 
         if (factory != null && !factory.isBlank() && !factory.equalsIgnoreCase("ALL")) {
-            Specification<Product> factorySpec = GenericSpecification.equal("factory", factory);
-            spec = spec == null ? factorySpec : spec.and(factorySpec);
+            spec = spec.and(GenericSpecification.equal("factory", factory));
         }
+
+        // Bước 1: pagination đúng trong SQL
         Page<Product> productPage = productRepository.findAll(spec, pageable);
-        List<ResProductDTO> products = productPage.getContent().stream()
+        List<Long> ids = productPage.getContent()
+                .stream()
+                .map(Product::getId)
+                .collect(Collectors.toList());
+
+        if (ids.isEmpty()) {
+            return new PageResponseDTO<>(
+                    Collections.emptyList(),
+                    0L, 0, 1, pageable.getPageSize());
+        }
+
+        Map<Long, Product> productMap = productRepository.findAllWithDetailsByIds(ids)
+                .stream()
+                .collect(Collectors.toMap(Product::getId, p -> p));
+
+        List<ResProductDTO> products = ids.stream()
+                .map(productMap::get)
+                .filter(Objects::nonNull)
                 .map(productMapper::toResProductDTO)
                 .collect(Collectors.toList());
 
-        return new PageResponseDTO<ResProductDTO>(
+        return new PageResponseDTO<>(
                 products,
                 productPage.getTotalElements(),
                 productPage.getTotalPages(),
@@ -140,17 +204,18 @@ public class ProductService {
 
         if (updateProductDTO.getName() != null)
             product.setName(updateProductDTO.getName());
-        if (updateProductDTO.getOriginalPrice() != null)
-            product.setOriginalPrice(updateProductDTO.getOriginalPrice());
-        if (updateProductDTO.getCoupon() != null)
-            product.setCoupon(updateProductDTO.getCoupon());
         if ((updateProductDTO.getOriginalPrice() != null
                 && !updateProductDTO.getOriginalPrice().equals(product.getOriginalPrice())) ||
                 (updateProductDTO.getCoupon() != null && !updateProductDTO.getCoupon().equals(product.getCoupon()))) {
             int price = (int) Math
-                    .round(product.getOriginalPrice() - (product.getOriginalPrice() * product.getCoupon() / 100.0));
+                    .round(updateProductDTO.getOriginalPrice()
+                            - (updateProductDTO.getOriginalPrice() * updateProductDTO.getCoupon() / 100.0));
             product.setPrice(price);
         }
+        if (updateProductDTO.getOriginalPrice() != null)
+            product.setOriginalPrice(updateProductDTO.getOriginalPrice());
+        if (updateProductDTO.getCoupon() != null)
+            product.setCoupon(updateProductDTO.getCoupon());
         if (updateProductDTO.getQuantity() != null)
             product.setQuantity(updateProductDTO.getQuantity());
         if (updateProductDTO.getWarranty() != null)
@@ -225,6 +290,22 @@ public class ProductService {
 
     public Long countProducts() {
         return productRepository.countLongByQuantityGreaterThan(0);
+    }
+
+    @Transactional
+    public void addFeaturesToProduct(Long productId, List<ProductFeatureDTO> featureDTOs) {
+        productRepository.findById(productId)
+                .orElseThrow(() -> new NotFindException("Product not found with id: " + productId));
+        for (ProductFeatureDTO featureDTO : featureDTOs) {
+            productRepository.addFeatures(productId, featureDTO.getFeatureId());
+        }
+    }
+
+    @Transactional
+    public void deleteFeatureFromProduct(Long productId, Long featureId) {
+        productRepository.findById(productId)
+                .orElseThrow(() -> new NotFindException("Product not found with id: " + productId));
+        productRepository.deleteFeatures(productId, featureId);
     }
 
     public FilterProductResponseDTO filterProducts(FilterProductDTO filter) {

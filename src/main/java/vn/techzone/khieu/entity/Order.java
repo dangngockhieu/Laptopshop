@@ -1,6 +1,7 @@
 package vn.techzone.khieu.entity;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -60,8 +61,7 @@ public class Order {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+7")
     private Instant deliveryDate;
 
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+7")
-    private Instant expectedDate;
+    private LocalDate expectedDate;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+7")
     private Instant receivedDate;

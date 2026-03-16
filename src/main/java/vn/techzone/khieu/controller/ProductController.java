@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,6 +25,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import vn.techzone.khieu.dto.request.product.CreateProductDTO;
 import vn.techzone.khieu.dto.request.product.FilterProductDTO;
+import vn.techzone.khieu.dto.request.product.ProductFeatureDTO;
 import vn.techzone.khieu.dto.request.product.UpdateProductDTO;
 import vn.techzone.khieu.dto.request.review.CreateReviewDTO;
 import vn.techzone.khieu.dto.response.PageResponseDTO;
@@ -57,7 +59,7 @@ public class ProductController {
 
     @GetMapping("/products-paginate")
     @ApiMessage("Lấy danh sách sản phẩm")
-    public ResponseEntity<PageResponseDTO<ResProductDTO>> getAllUsers(
+    public ResponseEntity<PageResponseDTO<ResProductDTO>> getAllProducts(
             @RequestParam(value = "current", defaultValue = "1") int current,
             @RequestParam(value = "pageSize", defaultValue = "10") int pageSize,
             @RequestParam(value = "keyword", required = false) String keyword,
@@ -104,6 +106,43 @@ public class ProductController {
         Long userId = SecurityUtil.getCurrentUserId();
         productService.createReview(userId, createReviewDTO);
         return ResponseEntity.ok(new ResStringDTO("Đánh giá đã được tạo thành công"));
+    }
+
+    @PostMapping(value = "/product-images/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @ApiMessage("Thêm ảnh sản phẩm")
+    public ResponseEntity<ResStringDTO> addProductImages(
+            @PathVariable Long id,
+            @RequestPart("images") List<MultipartFile> images)
+            throws IOException, StorageException, URISyntaxException {
+        productService.addProductImages(id, images);
+        return ResponseEntity.ok().body(new ResStringDTO("Ảnh sản phẩm đã được thêm thành công"));
+    }
+
+    @DeleteMapping("/product-image/{imageId}")
+    @ApiMessage("Xóa ảnh sản phẩm")
+    public ResponseEntity<ResStringDTO> deleteProductImage(@PathVariable Long imageId)
+            throws StorageException, URISyntaxException {
+        productService.deleteProductImage(imageId);
+        return ResponseEntity.ok().body(new ResStringDTO("Ảnh sản phẩm đã được xóa thành công"));
+    }
+
+    // Add features to product
+    @PostMapping("/{productId}/features")
+    @ApiMessage("Thêm tính năng cho sản phẩm")
+    public ResponseEntity<ResStringDTO> addFeaturesToProduct(
+            @PathVariable Long productId,
+            @Valid @RequestBody List<ProductFeatureDTO> featureDTOs) {
+        productService.addFeaturesToProduct(productId, featureDTOs);
+        return ResponseEntity.ok(new ResStringDTO("Tính năng đã được thêm vào sản phẩm thành công"));
+    }
+
+    @DeleteMapping("/{productId}/features/{featureId}")
+    @ApiMessage("Xóa tính năng khỏi sản phẩm")
+    public ResponseEntity<ResStringDTO> deleteFeatureFromProduct(
+            @PathVariable Long productId,
+            @PathVariable Long featureId) {
+        productService.deleteFeatureFromProduct(productId, featureId);
+        return ResponseEntity.ok(new ResStringDTO("Tính năng đã được xóa khỏi sản phẩm thành công"));
     }
 
     ////////////////////////////////////////////////////////////////////////////////////

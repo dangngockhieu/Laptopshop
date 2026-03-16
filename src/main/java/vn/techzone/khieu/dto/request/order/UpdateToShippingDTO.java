@@ -1,8 +1,6 @@
 package vn.techzone.khieu.dto.request.order;
 
-import java.time.Instant;
-
-import com.fasterxml.jackson.annotation.JsonFormat;
+import java.time.LocalDate;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -14,7 +12,6 @@ public class UpdateToShippingDTO {
     private String trackingCode;
 
     @NotNull(message = "Expected date is required")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+7")
-    private Instant expectedDate;
+    private LocalDate expectedDate;
 
 }

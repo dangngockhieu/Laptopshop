@@ -2,6 +2,9 @@ package vn.techzone.khieu.repository;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
@@ -16,14 +19,39 @@ import vn.techzone.khieu.entity.Product;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
+
+    // Pagination thuần, không fetch collection → pagination đúng trong SQL
+    Page<Product> findAll(Specification<Product> spec, Pageable pageable);
+
+    // Fetch đủ data cho list đã có IDs
+    @Query("SELECT DISTINCT p FROM Product p " +
+            "LEFT JOIN FETCH p.images " +
+            "LEFT JOIN FETCH p.features pf " +
+            "LEFT JOIN FETCH pf.feature " +
+            "WHERE p.id IN :ids")
+    List<Product> findAllWithDetailsByIds(@Param("ids") List<Long> ids);
+
+    // Kiểm tra tồn tại sản phẩm theo id và quantity > 0
     boolean existsByIdAndQuantityGreaterThan(Long id, Integer quantity);
 
+    // Đếm số lượng sản phẩm có quantity > 0
     Long countLongByQuantityGreaterThan(Integer quantity);
 
+    // Thêm features vào product
+    @Modifying
+    @Query(value = "INSERT INTO product_features (product_id, feature_id) VALUES (:productId, :featureId)", nativeQuery = true)
+    void addFeatures(@Param("productId") Long productId, @Param("featureId") Long featureId);
+
+    @Modifying
+    @Query(value = "DELETE FROM product_features WHERE product_id =:productId AND feature_id=:featureId", nativeQuery = true)
+    void deleteFeatures(@Param("productId") Long productId, @Param("featureId") Long featureId);
+
+    // Update quantity và sold khi tạo đơn hàng
     @Modifying
     @Query(value = "UPDATE products SET quantity = quantity - :qty, sold = sold + :qty WHERE id = :id AND quantity >= :qty", nativeQuery = true)
     int updateQuantityAndSoleCreateOrder(@Param("id") Long id, @Param("qty") Integer qty);
 
+    // Lấy danh sách sản phẩm bán chạy theo danh mục
     @Query(value = """
                 SELECT p.id, p.name,
                     p.original_price AS "originalPrice",
@@ -58,6 +86,7 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
             """, nativeQuery = true)
     List<ResCardProductDTO> findAllProductsCategory(@Param("category") String category);
 
+    // Lấy danh sách sản phẩm bán chạy
     @Query(value = """
                 SELECT p.id, p.name,
                     p.sold
