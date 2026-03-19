@@ -40,6 +40,7 @@ import vn.techzone.khieu.service.ProductExcelService;
 import vn.techzone.khieu.service.ProductService;
 import vn.techzone.khieu.utils.SecurityUtil;
 import vn.techzone.khieu.utils.annotation.ApiMessage;
+import vn.techzone.khieu.utils.annotation.RateLimit;
 import vn.techzone.khieu.utils.error.StorageException;
 
 @RestController
@@ -113,6 +114,7 @@ public class ProductController {
     }
 
     @GetMapping("/top-products-category")
+    @RateLimit(capacity = 10, minutes = 1)
     @ApiMessage("Lấy danh sách sản phẩm bán chạy theo danh mục")
     public ResponseEntity<List<ResCardProductDTO>> getTopProductsCategory(
             @RequestParam(value = "category") String category) {
@@ -120,6 +122,7 @@ public class ProductController {
     }
 
     @PostMapping("/filter")
+    @RateLimit(capacity = 5, minutes = 1)
     @ApiMessage("Filter products by multiple criteria")
     public ResponseEntity<FilterProductResponseDTO> filterProducts(
             @Valid @RequestBody FilterProductDTO filterProductDTO) {
@@ -190,6 +193,7 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
+    @RateLimit(capacity = 5, minutes = 1)
     @ApiMessage("Lấy chi tiết sản phẩm")
     public ResponseEntity<ResProductDetailDTO> getProductById(@PathVariable Long id) {
         ResProductDetailDTO product = this.productService.getProductById(id);

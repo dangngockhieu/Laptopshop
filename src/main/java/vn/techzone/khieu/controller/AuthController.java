@@ -38,6 +38,7 @@ import vn.techzone.khieu.service.UserService;
 import vn.techzone.khieu.service.user.UserPrincipal;
 import vn.techzone.khieu.utils.SecurityUtil;
 import vn.techzone.khieu.utils.annotation.ApiMessage;
+import vn.techzone.khieu.utils.annotation.RateLimit;
 import vn.techzone.khieu.utils.error.NotFindException;
 import vn.techzone.khieu.utils.error.UnauthorizedException;
 
@@ -54,6 +55,7 @@ public class AuthController {
         private long refreshTokenExpired;
 
         @PostMapping("/login")
+        @RateLimit(capacity = 3, minutes = 1)
         @ApiMessage("Đăng nhập")
         public ResponseEntity<ResLoginDTO> login(@Valid @RequestBody LoginDTO loginDTO) {
                 // Nạp input gồm email/password vào Security
@@ -111,6 +113,7 @@ public class AuthController {
         }
 
         @PostMapping("/refresh-token")
+        @RateLimit(capacity = 3, minutes = 1)
         @ApiMessage("Refresh token")
         public ResponseEntity<ResLoginDTO> refreshToken(
                         @CookieValue(name = "refreshToken", required = false) String refreshToken) {
@@ -152,6 +155,7 @@ public class AuthController {
         }
 
         @PostMapping("/user/logout")
+        @RateLimit(capacity = 3, minutes = 1)
         @ApiMessage("Logout")
         public ResponseEntity<Void> handleLogout() {
                 String email = SecurityUtil.getCurrentUserLogin().orElse(null);
@@ -172,6 +176,7 @@ public class AuthController {
         }
 
         @PostMapping("/register")
+        @RateLimit(capacity = 1, minutes = 3)
         @ApiMessage("Đăng ký")
         public ResponseEntity<ResStringDTO> register(@Valid @RequestBody RegisterUserDTO registerDTO) {
                 this.authService.handleRegister(registerDTO);
@@ -181,6 +186,7 @@ public class AuthController {
         }
 
         @GetMapping("/verify")
+        @RateLimit(capacity = 1, minutes = 3)
         @ApiMessage("Xác minh tài khoản")
         public ResponseEntity<String> verifyAccount(@RequestParam String token, @RequestParam String email) {
                 this.authService.verifyToken(token, email);
@@ -196,6 +202,7 @@ public class AuthController {
         }
 
         @PostMapping("/send-reset-password")
+        @RateLimit(capacity = 1, minutes = 30)
         @ApiMessage("Gửi email đặt lại mật khẩu")
         public ResponseEntity<ResStringDTO> sendResetPasswordEmail(@RequestBody EmailDTO emailDTO) {
                 this.authService.sendEmailResetPassword(emailDTO.getEmail());
@@ -204,6 +211,7 @@ public class AuthController {
         }
 
         @PatchMapping("/reset-password")
+        @RateLimit(capacity = 1, minutes = 3)
         @ApiMessage("Đặt lại mật khẩu")
         public ResponseEntity<ResStringDTO> resetPassword(@Valid @RequestBody ResetPasswordDTO resetPasswordDTO) {
                 this.authService.resetPassword(resetPasswordDTO);
@@ -211,6 +219,7 @@ public class AuthController {
         }
 
         @PostMapping("/send-verification-email")
+        @RateLimit(capacity = 1, minutes = 30)
         @ApiMessage("Gửi email xác minh")
         public ResponseEntity<ResStringDTO> sendVerificationEmail(@RequestBody EmailDTO emailDTO) {
                 this.authService.reSendVerificationEmail(emailDTO.getEmail());

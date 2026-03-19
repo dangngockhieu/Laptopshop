@@ -20,6 +20,7 @@ import vn.techzone.khieu.dto.response.user.ResStringDTO;
 import vn.techzone.khieu.service.CartService;
 import vn.techzone.khieu.utils.SecurityUtil;
 import vn.techzone.khieu.utils.annotation.ApiMessage;
+import vn.techzone.khieu.utils.annotation.RateLimit;
 
 @RestController
 @RequestMapping("/api/carts")
@@ -51,6 +52,7 @@ public class CartController {
     }
 
     @PatchMapping("/user/update-quantity")
+    @RateLimit(capacity = 5, minutes = 1)
     @ApiMessage("Cập nhật số lượng sản phẩm trong giỏ hàng")
     public ResponseEntity<Void> updateQuantityCart(@Valid @RequestBody UpdateQuantityCartDTO updateQuantityCartDTO) {
         Long userId = SecurityUtil.getCurrentUserId();
