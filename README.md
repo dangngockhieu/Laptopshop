@@ -33,11 +33,18 @@ Dự án bao gồm:
 
 ---
 
-## 📥 1️⃣ Clone project
+## 📥 1 Clone project backend spring
 
 ```bash
 git clone https://github.com/dangngockhieu/Laptopshop.git
-cd Techzone
+```
+
+## 📥 2 Clone project frontend react
+
+```bash
+git clone https://github.com/dangngockhieu/Frontend-laptopshop.git
+```
+
 ```
 
 ## 🔐 Các tính năng chính
@@ -61,3 +68,4 @@ Token được ký bằng JWT (access + refresh)
 Xác thực qua HTTP-only Cookie
 
 Prisma được khởi tạo theo Singleton pattern để tránh leak connection
+```
