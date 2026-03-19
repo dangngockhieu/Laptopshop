@@ -3,6 +3,7 @@ package vn.techzone.khieu.service;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -27,6 +28,8 @@ import vn.techzone.khieu.dto.request.product.UpdateProductDTO;
 import vn.techzone.khieu.dto.request.review.CreateReviewDTO;
 import vn.techzone.khieu.dto.response.PageResponseDTO;
 import vn.techzone.khieu.dto.response.product.ResProductDTO;
+import vn.techzone.khieu.dto.response.product.AllProductForChatBot.ResProductforAiChatBotDTO;
+import vn.techzone.khieu.dto.response.product.AllProductForChatBot.ResProductforAiChatBotProjection;
 import vn.techzone.khieu.dto.response.product.ProductDetailDTO.ResProductDetail;
 import vn.techzone.khieu.dto.response.product.ProductDetailDTO.ResProductDetailDTO;
 import vn.techzone.khieu.dto.response.product.ProductDetailDTO.ResReview;
@@ -301,6 +304,34 @@ public class ProductService {
         review.setComment(createReviewDTO.getComment());
 
         reviewRepository.save(review);
+    }
+
+    public List<ResProductforAiChatBotDTO> getAllProductsForChatBot() {
+        List<ResProductforAiChatBotProjection> projections = productRepository.findAllProductsforChatBot();
+        return projections.stream()
+                .map(p -> new ResProductforAiChatBotDTO(
+                        p.getId(),
+                        p.getName(),
+                        p.getOriginalPrice(),
+                        p.getPrice(),
+                        p.getCoupon(),
+                        p.getQuantity(),
+                        p.getSold(),
+                        p.getWarranty(),
+                        p.getInfor(),
+                        p.getCpu(),
+                        p.getRam(),
+                        p.getStorage(),
+                        p.getScreen(),
+                        p.getGraphicsCard(),
+                        p.getBattery(),
+                        p.getWeight(),
+                        p.getReleaseYear(),
+                        p.getCategory(),
+                        p.getFactory(),
+                        p.getImageUrl(),
+                        p.getFeatures() != null ? Arrays.asList(p.getFeatures().split(",")) : List.of()))
+                .collect(Collectors.toList());
     }
 
     @Transactional

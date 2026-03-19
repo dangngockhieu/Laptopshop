@@ -14,13 +14,14 @@ import org.springframework.stereotype.Repository;
 
 import vn.techzone.khieu.dto.response.product.ResBestSeller;
 import vn.techzone.khieu.dto.response.product.ResCardProductDTO;
+import vn.techzone.khieu.dto.response.product.AllProductForChatBot.ResProductforAiChatBotProjection;
 import vn.techzone.khieu.dto.response.product.ProductDetailDTO.ResProductDetail;
 import vn.techzone.khieu.entity.Product;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
 
-    // Pagination thuần, không fetch collection → pagination đúng trong SQL
+    // Pagination thuần, không fetch collection
     Page<Product> findAll(Specification<Product> spec, Pageable pageable);
 
     // Fetch đủ data cho list đã có IDs
@@ -111,4 +112,24 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
             GROUP BY p.id
             """, nativeQuery = true)
     ResProductDetail findProductById(@Param("id") Long id);
+
+    @Query(value = """
+            SELECT p.id, p.name, p.original_price AS "originalPrice", p.price, p.coupon,
+                   p.quantity, p.sold, p.warranty, p.infor, p.cpu, p.ram, p.storage, p.screen,
+                   p.graphics_card AS "graphicsCard", p.battery, p.weight, p.release_year AS "releaseYear",
+                   p.category, p.factory,
+                   img.url AS "imageUrl",
+                   STRING_AGG(f.name, ',') AS "features"
+            FROM products p
+            LEFT JOIN (
+                SELECT DISTINCT ON (product_id)
+                    product_id, url
+                FROM product_images
+                ORDER BY product_id, id
+            ) img ON p.id = img.product_id
+            LEFT JOIN product_features pf ON p.id = pf.product_id
+            LEFT JOIN features f ON pf.feature_id = f.id
+            GROUP BY p.id, img.url
+            """, nativeQuery = true)
+    List<ResProductforAiChatBotProjection> findAllProductsforChatBot();
 }
