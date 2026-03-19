@@ -77,6 +77,7 @@ public class ProductExcelService {
                 p.setName(getStringCell(row, 0));
                 p.setOriginalPrice(getIntCell(row, 1));
                 p.setCoupon(getIntCell(row, 2));
+                p.setPrice(getIntCell(row, 1) - getIntCell(row, 2) * getIntCell(row, 1) / 100);
                 p.setQuantity(getIntCell(row, 3));
                 p.setWarranty(getStringCell(row, 4));
                 p.setInfor(getStringCell(row, 5));
