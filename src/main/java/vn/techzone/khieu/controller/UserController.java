@@ -32,7 +32,7 @@ import vn.techzone.khieu.utils.error.NotFindException;
 public class UserController {
     private final UserService userService;
 
-    @GetMapping()
+    @GetMapping("/admin")
     @ApiMessage("Lấy danh sách người dùng")
     public ResponseEntity<PageResponseDTO<ResUserDTO>> getAllUsers(
             @RequestParam(value = "current", defaultValue = "1") int current,
@@ -43,21 +43,14 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
 
-    @GetMapping("/{id}")
-    @ApiMessage("Lấy thông tin người dùng theo ID")
-    public ResponseEntity<ResUserDTO> getUserById(@PathVariable("id") long id) {
-        ResUserDTO user = this.userService.getUserById(id);
-        return ResponseEntity.ok(user);
-    }
-
-    @PostMapping()
+    @PostMapping("/admin")
     @ApiMessage("Tạo mới người dùng cho Admin")
     public ResponseEntity<ResUserDTO> createUserForAdmin(@Valid @RequestBody CreateUserDTO userDTO) {
         ResUserDTO user = this.userService.handleCreateUserForAdmin(userDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(user);
     }
 
-    @PatchMapping("/change-password")
+    @PatchMapping("/user/change-password")
     @ApiMessage("Cập nhật mật khẩu người dùng")
     public ResponseEntity<ResUserDTO> updatePasswordUser(@Valid @RequestBody UpdatePasswordDTO updatePasswordDTO) {
         String email = SecurityUtil.getCurrentUserLogin().orElse(null);
@@ -68,7 +61,7 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.OK).body(user);
     }
 
-    @PatchMapping("/role/{id}")
+    @PatchMapping("/admin/role/{id}")
     @ApiMessage("Cập nhật quyền hạn người dùng")
     public ResponseEntity<ResUserDTO> updateRoleUser(@PathVariable("id") long id,
             @Valid @RequestBody UpdateRoleDTO updateRoleDTO) {
@@ -76,7 +69,7 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.OK).body(user);
     }
 
-    @GetMapping("/count")
+    @GetMapping("/admin/count")
     @ApiMessage("Đếm số lượng người dùng")
     public ResponseEntity<Long> countUsers() {
         long count = this.userService.countUsers();

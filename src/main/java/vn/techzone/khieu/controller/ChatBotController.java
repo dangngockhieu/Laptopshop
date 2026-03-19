@@ -25,7 +25,7 @@ public class ChatBotController {
     private final ChatBotService chatBotService;
     private final ChatMessageService chatMessageService;
 
-    @PostMapping("/ask")
+    @PostMapping("/user/ask")
     @ApiMessage("Chat với AI")
     public ResponseEntity<ChatResponseDTO> ask(@RequestBody ChatRequestDTO dto) {
         Long userId = SecurityUtil.getCurrentUserId();
@@ -39,7 +39,7 @@ public class ChatBotController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/history")
+    @GetMapping("/user/history")
     @ApiMessage("Lấy lịch sử chat")
     public ResponseEntity<List<ChatMessage>> getHistory() {
         Long userId = SecurityUtil.getCurrentUserId();

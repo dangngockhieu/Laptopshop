@@ -42,7 +42,7 @@ public class OrderController {
     private final OrderService orderService;
     private final CartService cartService;
 
-    @PostMapping()
+    @PostMapping("/user")
     @ApiMessage("Tạo đơn hàng mới")
     public ResponseEntity<Long> createOrder(@Valid @RequestBody CreateOrderDTO createOrderDTO) {
         Long userId = SecurityUtil.getCurrentUserId();
@@ -50,14 +50,14 @@ public class OrderController {
         return ResponseEntity.ok(orderId);
     }
 
-    @DeleteMapping("/{orderId}")
+    @DeleteMapping("/admin/{orderId}")
     @ApiMessage("Hủy đơn hàng đang chờ xử lý")
     public ResponseEntity<Void> cancelOrder(@PathVariable Long orderId) {
         orderService.deleteOrder(orderId);
         return ResponseEntity.ok().build();
     }
 
-    @GetExchange("/pending")
+    @GetExchange("/admin/pending")
     @ApiMessage("Lấy danh sách đơn hàng đang chờ xử lý")
     public ResponseEntity<PageResponseDTO<ResOrderDTO>> getOrdersPending(
             @RequestParam(value = "current", defaultValue = "1") int current,
@@ -66,7 +66,7 @@ public class OrderController {
         return ResponseEntity.ok(orderService.getOrdersPending(pageable));
     }
 
-    @GetExchange("/status")
+    @GetExchange("/admin/status")
     @ApiMessage("Lấy danh sách đơn hàng theo trạng thái")
     public ResponseEntity<PageResponseDTO<ResOrderDTO>> getOrdersStatus(
             @RequestParam String status,
@@ -76,13 +76,13 @@ public class OrderController {
         return ResponseEntity.ok(orderService.getOrdersStatus(status, pageable));
     }
 
-    @GetMapping("order-item")
+    @GetMapping("/admin/order-item")
     @ApiMessage("Lấy danh sách sản phẩm trong đơn hàng")
     public ResponseEntity<List<ResOrderItemDTO>> getOrderItems(@RequestParam Long orderId) {
         return ResponseEntity.ok(orderService.getOrderItems(orderId));
     }
 
-    @PatchMapping("/updateToShipping/{orderId}")
+    @PatchMapping("/admin/updateToShipping/{orderId}")
     @ApiMessage("Cập nhật trạng thái đơn hàng sang Đang giao")
     public ResponseEntity<Void> updateOrderToShipping(@Valid @RequestBody UpdateToShippingDTO dto,
             @PathVariable Long orderId) {
@@ -90,7 +90,7 @@ public class OrderController {
         return ResponseEntity.ok().build();
     }
 
-    @PatchMapping("/updateToStatus/{orderId}")
+    @PatchMapping("/user/updateToStatus/{orderId}")
     @ApiMessage("Cập nhật trạng thái đơn hàng")
     public ResponseEntity<Void> updateOrderStatus(@Valid @RequestBody UpdateToStatusDTO dto,
             @PathVariable Long orderId) {
@@ -99,32 +99,32 @@ public class OrderController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/user-orders")
+    @GetMapping("/user/user-orders")
     @ApiMessage("Lấy danh sách đơn hàng của người dùng")
     public ResponseEntity<List<ResOrderUserDTO>> getUserOrders(@RequestParam String status) {
         Long userId = SecurityUtil.getCurrentUserId();
         return ResponseEntity.ok(orderService.getUserOrders(userId, status));
     }
 
-    @GetMapping("/count")
+    @GetMapping("/admin/count")
     @ApiMessage("Đếm số lượng đơn hàng")
     public ResponseEntity<ResOrderCountDTO> countOrdersByStatus() {
         return ResponseEntity.ok(orderService.countOrders());
     }
 
-    @GetMapping("/revenue")
+    @GetMapping("/admin/revenue")
     @ApiMessage("Thống kê doanh thu theo tháng")
     public ResponseEntity<ResRevenueThisMonthDTO> getRevenueThisMonth() {
         return ResponseEntity.ok(orderService.getRevenueThisMonth());
     }
 
-    @GetMapping("/revenue-by-month")
+    @GetMapping("/admin/revenue-by-month")
     @ApiMessage("Thống kê doanh thu theo tháng trong năm")
     public ResponseEntity<List<Long>> getRevenueByMonth() {
         return ResponseEntity.ok(orderService.getRevenueByMonth());
     }
 
-    @PostMapping("/buy-again")
+    @PostMapping("/user/buy-again")
     @ApiMessage("Mua lại đơn hàng")
     public ResponseEntity<ResStringDTO> buyAgain(@Valid @RequestBody List<ProductIdDTO> productIdDTOs) {
         Long userId = SecurityUtil.getCurrentUserId();

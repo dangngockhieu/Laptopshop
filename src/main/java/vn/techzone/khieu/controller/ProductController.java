@@ -30,7 +30,6 @@ import vn.techzone.khieu.dto.request.product.UpdateProductDTO;
 import vn.techzone.khieu.dto.request.review.CreateReviewDTO;
 import vn.techzone.khieu.dto.response.PageResponseDTO;
 import vn.techzone.khieu.dto.response.product.ResProductDTO;
-import vn.techzone.khieu.dto.response.product.AllProductForChatBot.ResProductforAiChatBotDTO;
 import vn.techzone.khieu.dto.response.product.ProductDetailDTO.ResProductDetailDTO;
 import vn.techzone.khieu.dto.response.user.ResStringDTO;
 import vn.techzone.khieu.dto.response.product.FilterProductResponseDTO;
@@ -50,7 +49,7 @@ public class ProductController {
     private final ProductService productService;
     private final ProductExcelService productExcelService;
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/admin", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ApiMessage("Tạo mới sản phẩm")
     public ResponseEntity<Product> createProduct(
             @RequestPart("data") @Valid CreateProductDTO dto,
@@ -60,7 +59,7 @@ public class ProductController {
         return ResponseEntity.ok(product);
     }
 
-    @PostMapping("/upload-excel")
+    @PostMapping("/admin/upload-excel")
     public ResponseEntity<ResStringDTO> uploadExcel(@RequestParam("excel") MultipartFile file) {
         // Kiểm tra file trống
         if (file.isEmpty()) {
@@ -86,14 +85,7 @@ public class ProductController {
         }
     }
 
-    @GetMapping("/all-products")
-    @ApiMessage("Lấy tất cả sản phẩm (không phân trang)")
-    public ResponseEntity<List<ResProductforAiChatBotDTO>> getAllProducts() {
-        List<ResProductforAiChatBotDTO> products = this.productService.getAllProductsForChatBot();
-        return ResponseEntity.ok(products);
-    }
-
-    @GetMapping("/products-paginate")
+    @GetMapping("/admin/products-paginate")
     @ApiMessage("Lấy danh sách sản phẩm")
     public ResponseEntity<PageResponseDTO<ResProductDTO>> getAllProducts(
             @RequestParam(value = "current", defaultValue = "1") int current,
@@ -107,13 +99,13 @@ public class ProductController {
         return ResponseEntity.ok(products);
     }
 
-    @GetMapping("/top-products")
+    @GetMapping("/admin/top-products")
     @ApiMessage("Lấy danh sách sản phẩm bán chạy")
     public ResponseEntity<List<ResBestSeller>> getTopProducts() {
         return ResponseEntity.ok(this.productService.getTopProducts());
     }
 
-    @GetMapping("/count")
+    @GetMapping("/admin/count")
     @ApiMessage("Đếm số lượng sản phẩm có trong kho")
     public ResponseEntity<Long> countProducts() {
         Long count = this.productService.countProducts();
@@ -136,7 +128,7 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/reviews")
+    @PostMapping("/user/reviews")
     @ApiMessage("Tạo đánh giá cho sản phẩm")
     public ResponseEntity<ResStringDTO> createReview(@Valid @RequestBody CreateReviewDTO createReviewDTO) {
         Long userId = SecurityUtil.getCurrentUserId();
@@ -144,14 +136,14 @@ public class ProductController {
         return ResponseEntity.ok(new ResStringDTO("Đánh giá đã được tạo thành công"));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/admin/{id}")
     @ApiMessage("Xóa sản phẩm")
     public ResponseEntity<ResStringDTO> deleteProduct(@PathVariable Long id) {
         productService.deleteProduct(id);
         return ResponseEntity.ok(new ResStringDTO("Sản phẩm đã được xóa thành công"));
     }
 
-    @PostMapping(value = "/product-images/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/admin/product-images/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ApiMessage("Thêm ảnh sản phẩm")
     public ResponseEntity<ResStringDTO> addProductImages(
             @PathVariable Long id,
@@ -161,7 +153,7 @@ public class ProductController {
         return ResponseEntity.ok().body(new ResStringDTO("Ảnh sản phẩm đã được thêm thành công"));
     }
 
-    @DeleteMapping("/product-image/{imageId}")
+    @DeleteMapping("/admin/product-image/{imageId}")
     @ApiMessage("Xóa ảnh sản phẩm")
     public ResponseEntity<ResStringDTO> deleteProductImage(@PathVariable Long imageId)
             throws StorageException, URISyntaxException {
@@ -170,7 +162,7 @@ public class ProductController {
     }
 
     // Add features to product
-    @PostMapping("/{productId}/features")
+    @PostMapping("/admin/{productId}/features")
     @ApiMessage("Thêm tính năng cho sản phẩm")
     public ResponseEntity<ResStringDTO> addFeaturesToProduct(
             @PathVariable Long productId,
@@ -179,7 +171,7 @@ public class ProductController {
         return ResponseEntity.ok(new ResStringDTO("Tính năng đã được thêm vào sản phẩm thành công"));
     }
 
-    @DeleteMapping("/{productId}/features/{featureId}")
+    @DeleteMapping("/admin/{productId}/features/{featureId}")
     @ApiMessage("Xóa tính năng khỏi sản phẩm")
     public ResponseEntity<ResStringDTO> deleteFeatureFromProduct(
             @PathVariable Long productId,
@@ -189,7 +181,7 @@ public class ProductController {
     }
 
     ////////////////////////////////////////////////////////////////////////////////////
-    @PatchMapping("/{id}")
+    @PatchMapping("/admin/{id}")
     @ApiMessage("Cập nhật thông tin sản phẩm")
     public ResponseEntity<ResProductDTO> updateProduct(@Valid @RequestBody UpdateProductDTO updateProductDTO,
             @PathVariable Long id) {
