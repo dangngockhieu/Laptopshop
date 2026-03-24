@@ -1,13 +1,9 @@
 package vn.techzone.khieu.service;
 
 import java.time.Instant;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.temporal.TemporalAdjusters;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
@@ -23,17 +19,11 @@ import vn.techzone.khieu.dto.request.order.UpdateToShippingDTO;
 import vn.techzone.khieu.dto.request.order.UpdateToStatusDTO;
 import vn.techzone.khieu.dto.request.order.CreateOrderDTO.OrderItemDTO;
 import vn.techzone.khieu.dto.response.PageResponseDTO;
-import vn.techzone.khieu.dto.response.order.ResMonthlyRevenueDTO;
-import vn.techzone.khieu.dto.response.order.ResOrderCountDTO;
 import vn.techzone.khieu.dto.response.order.ResOrderDTO;
 import vn.techzone.khieu.dto.response.order.ResOrderItemDTO;
 import vn.techzone.khieu.dto.response.order.ResOrderUser.ResOrderItemUser;
 import vn.techzone.khieu.dto.response.order.ResOrderUser.ResOrderUserDTO;
 import vn.techzone.khieu.dto.response.order.ResOrderUser.ResUserOrder;
-import vn.techzone.khieu.dto.response.order.ResRevenue.ResRevenue;
-import vn.techzone.khieu.dto.response.order.ResRevenue.ResRevenueThisMonthDTO;
-import vn.techzone.khieu.entity.Cart;
-import vn.techzone.khieu.entity.CartId;
 import vn.techzone.khieu.entity.Order;
 import vn.techzone.khieu.entity.OrderItem;
 import vn.techzone.khieu.entity.Payment;
@@ -253,85 +243,5 @@ public class OrderService {
                     order.getPaymentStatus(),
                     products);
         }).collect(Collectors.toList());
-    }
-
-    public ResOrderCountDTO countOrders() {
-        ZoneId vnZone = ZoneId.of("Asia/Ho_Chi_Minh");
-        ZonedDateTime now = ZonedDateTime.now(vnZone);
-        Instant start = now.withDayOfMonth(1).toLocalDate().atStartOfDay(vnZone).toInstant();
-        Instant end = now.with(TemporalAdjusters.lastDayOfMonth()).toLocalDate()
-                .atTime(23, 59, 59).atZone(vnZone).toInstant();
-        return orderRepository.countOrders(start, end);
-    }
-
-    public ResRevenueThisMonthDTO getRevenueThisMonth() {
-        ZoneId vnZone = ZoneId.of("Asia/Ho_Chi_Minh");
-        ZonedDateTime now = ZonedDateTime.now(vnZone);
-
-        Instant startCurrent = now.withDayOfMonth(1).toLocalDate().atStartOfDay(vnZone).toInstant();
-        Instant endCurrent = now.with(TemporalAdjusters.lastDayOfMonth()).toLocalDate()
-                .atTime(23, 59, 59).atZone(vnZone).toInstant();
-        Instant startPrev = now.minusMonths(1).withDayOfMonth(1).toLocalDate().atStartOfDay(vnZone).toInstant();
-        Instant endPrev = now.minusMonths(1).with(TemporalAdjusters.lastDayOfMonth()).toLocalDate()
-                .atTime(23, 59, 59).atZone(vnZone).toInstant();
-
-        ResRevenue result = orderRepository.getRevenue(startCurrent, endCurrent, startPrev, endPrev);
-
-        long current = result.getCurrentMonthRevenue() != null ? result.getCurrentMonthRevenue() : 0;
-        long prev = result.getPrevMonthRevenue() != null ? result.getPrevMonthRevenue() : 0;
-
-        double growth = 0;
-        if (prev > 0) {
-            growth = ((double) (current - prev) / prev) * 100;
-        } else if (current > 0) {
-            growth = 100;
-        }
-
-        ResRevenueThisMonthDTO res = new ResRevenueThisMonthDTO(current, Math.round(growth * 100.0) / 100.0);
-        return res;
-    }
-
-    public List<Long> getRevenueByMonth() {
-        ZoneId vnZone = ZoneId.of("Asia/Ho_Chi_Minh");
-        ZonedDateTime now = ZonedDateTime.now(vnZone);
-
-        Instant start = now.withDayOfYear(1).toLocalDate().atStartOfDay(vnZone).toInstant();
-        Instant end = now.with(TemporalAdjusters.lastDayOfYear()).toLocalDate()
-                .atTime(23, 59, 59).atZone(vnZone).toInstant();
-
-        List<ResMonthlyRevenueDTO> result = orderRepository.getRevenueByMonth(start, end);
-
-        Long[] monthlyRevenue = new Long[12];
-        Arrays.fill(monthlyRevenue, 0L);
-
-        result.forEach(r -> monthlyRevenue[r.getMonth() - 1] = r.getRevenue());
-
-        return Arrays.asList(monthlyRevenue);
-    }
-
-    @Transactional
-    public void buyAgain(Long userId, List<Long> productIds) {
-        for (Long productId : productIds) {
-            if (!productRepository.existsByIdAndQuantityGreaterThan(productId, 0)) {
-                continue;
-            }
-
-            CartId cartId = new CartId(userId, productId);
-            Optional<Cart> existingCart = cartRepository.findById(cartId);
-
-            if (existingCart.isPresent()) {
-                Cart cart = existingCart.get();
-                cart.setSelected(true);
-                cartRepository.save(cart);
-            } else {
-                Cart cart = new Cart();
-                cart.setId(cartId);
-                cart.setNumber(1);
-                cart.setSelected(true);
-                cart.setUser(userRepository.getReferenceById(userId));
-                cart.setProduct(productRepository.getReferenceById(productId));
-                cartRepository.save(cart);
-            }
-        }
     }
 }

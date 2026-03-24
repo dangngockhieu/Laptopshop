@@ -29,6 +29,7 @@ import vn.techzone.khieu.dto.response.order.ResRevenue.ResRevenueThisMonthDTO;
 import vn.techzone.khieu.dto.response.user.ResStringDTO;
 import vn.techzone.khieu.service.CartService;
 import vn.techzone.khieu.service.OrderService;
+import vn.techzone.khieu.service.RevenueService;
 import vn.techzone.khieu.utils.SecurityUtil;
 import vn.techzone.khieu.utils.annotation.ApiMessage;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -41,6 +42,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 public class OrderController {
     private final OrderService orderService;
     private final CartService cartService;
+    private final RevenueService revenueService;
 
     @PostMapping("/user")
     @ApiMessage("Tạo đơn hàng mới")
@@ -109,32 +111,26 @@ public class OrderController {
     @GetMapping("/admin/count")
     @ApiMessage("Đếm số lượng đơn hàng")
     public ResponseEntity<ResOrderCountDTO> countOrdersByStatus() {
-        return ResponseEntity.ok(orderService.countOrders());
+        return ResponseEntity.ok(revenueService.countOrders());
     }
 
     @GetMapping("/admin/revenue")
     @ApiMessage("Thống kê doanh thu theo tháng")
     public ResponseEntity<ResRevenueThisMonthDTO> getRevenueThisMonth() {
-        return ResponseEntity.ok(orderService.getRevenueThisMonth());
+        return ResponseEntity.ok(revenueService.getRevenueThisMonth());
     }
 
     @GetMapping("/admin/revenue-by-month")
     @ApiMessage("Thống kê doanh thu theo tháng trong năm")
     public ResponseEntity<List<Long>> getRevenueByMonth() {
-        return ResponseEntity.ok(orderService.getRevenueByMonth());
+        return ResponseEntity.ok(revenueService.getRevenueByMonth());
     }
 
     @PostMapping("/user/buy-again")
     @ApiMessage("Mua lại đơn hàng")
     public ResponseEntity<ResStringDTO> buyAgain(@Valid @RequestBody List<ProductIdDTO> productIdDTOs) {
         Long userId = SecurityUtil.getCurrentUserId();
-        for (ProductIdDTO dto : productIdDTOs) {
-            try {
-                cartService.buyNow(userId, dto.getProductId());
-            } catch (Exception e) {
-                // Bỏ qua sản phẩm lỗi, tiếp tục thêm cái khác
-            }
-        }
+        cartService.buyAgain(userId, productIdDTOs.stream().map(ProductIdDTO::getProductId).toList());
         return ResponseEntity.ok(new ResStringDTO("Buy Again Success"));
     }
 }

@@ -37,7 +37,9 @@ import vn.techzone.khieu.dto.response.product.ResBestSeller;
 import vn.techzone.khieu.dto.response.product.ResCardProductDTO;
 import vn.techzone.khieu.entity.Product;
 import vn.techzone.khieu.service.ProductExcelService;
+import vn.techzone.khieu.service.ProductImageService;
 import vn.techzone.khieu.service.ProductService;
+import vn.techzone.khieu.service.ReviewService;
 import vn.techzone.khieu.utils.SecurityUtil;
 import vn.techzone.khieu.utils.annotation.ApiMessage;
 import vn.techzone.khieu.utils.annotation.RateLimit;
@@ -49,6 +51,8 @@ import vn.techzone.khieu.utils.error.StorageException;
 public class ProductController {
     private final ProductService productService;
     private final ProductExcelService productExcelService;
+    private final ReviewService reviewService;
+    private final ProductImageService productImageService;
 
     @PostMapping(value = "/admin", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ApiMessage("Tạo mới sản phẩm")
@@ -135,7 +139,7 @@ public class ProductController {
     @ApiMessage("Tạo đánh giá cho sản phẩm")
     public ResponseEntity<ResStringDTO> createReview(@Valid @RequestBody CreateReviewDTO createReviewDTO) {
         Long userId = SecurityUtil.getCurrentUserId();
-        productService.createReview(userId, createReviewDTO);
+        reviewService.createReview(userId, createReviewDTO);
         return ResponseEntity.ok(new ResStringDTO("Đánh giá đã được tạo thành công"));
     }
 
@@ -152,7 +156,7 @@ public class ProductController {
             @PathVariable Long id,
             @RequestPart("images") List<MultipartFile> images)
             throws IOException, StorageException, URISyntaxException {
-        productService.addProductImages(id, images);
+        productImageService.addProductImages(id, images);
         return ResponseEntity.ok().body(new ResStringDTO("Ảnh sản phẩm đã được thêm thành công"));
     }
 
@@ -160,7 +164,7 @@ public class ProductController {
     @ApiMessage("Xóa ảnh sản phẩm")
     public ResponseEntity<ResStringDTO> deleteProductImage(@PathVariable Long imageId)
             throws StorageException, URISyntaxException {
-        productService.deleteProductImage(imageId);
+        productImageService.deleteProductImage(imageId);
         return ResponseEntity.ok().body(new ResStringDTO("Ảnh sản phẩm đã được xóa thành công"));
     }
 

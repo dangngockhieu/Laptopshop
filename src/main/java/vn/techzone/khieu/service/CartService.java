@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import vn.techzone.khieu.dto.response.cart.ResCartDTO;
 import vn.techzone.khieu.entity.Cart;
@@ -93,6 +94,32 @@ public class CartService {
             cart.setUser(userRepository.getReferenceById(userId));
             cart.setProduct(productRepository.getReferenceById(productId));
             cartRepository.save(cart);
+        }
+    }
+
+    @Transactional
+    public void buyAgain(Long userId, List<Long> productIds) {
+        for (Long productId : productIds) {
+            if (!productRepository.existsByIdAndQuantityGreaterThan(productId, 0)) {
+                continue;
+            }
+
+            CartId cartId = new CartId(userId, productId);
+            Optional<Cart> existingCart = cartRepository.findById(cartId);
+
+            if (existingCart.isPresent()) {
+                Cart cart = existingCart.get();
+                cart.setSelected(true);
+                cartRepository.save(cart);
+            } else {
+                Cart cart = new Cart();
+                cart.setId(cartId);
+                cart.setNumber(1);
+                cart.setSelected(true);
+                cart.setUser(userRepository.getReferenceById(userId));
+                cart.setProduct(productRepository.getReferenceById(productId));
+                cartRepository.save(cart);
+            }
         }
     }
 
