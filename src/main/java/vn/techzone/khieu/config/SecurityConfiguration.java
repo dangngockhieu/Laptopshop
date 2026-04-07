@@ -12,6 +12,8 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationEntryPoint;
 import org.springframework.security.oauth2.server.resource.web.access.BearerTokenAccessDeniedHandler;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 
 @Configuration
 @EnableMethodSecurity(securedEnabled = true)
@@ -21,6 +23,12 @@ public class SecurityConfiguration {
 
         SecurityConfiguration(JwtAuthenticationConverter jwtAuthenticationConverter) {
                 this.jwtAuthenticationConverter = jwtAuthenticationConverter;
+        }
+
+        @Bean
+        public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
+                        throws Exception {
+                return authenticationConfiguration.getAuthenticationManager();
         }
 
         @Bean
@@ -38,17 +46,24 @@ public class SecurityConfiguration {
                                 .cors(Customizer.withDefaults())
                                 .authorizeHttpRequests(
                                                 authz -> authz
-                                                                // CÁC API ADMIN
-                                                                .requestMatchers("/api/**/admin/**").hasRole("ADMIN")
-                                                                // CÁC API CỦA USER (USER và ADMIN đều được vào)
-                                                                .requestMatchers("/api/**/user/**")
-                                                                .hasAnyRole("USER", "ADMIN")
-
                                                                 // CÁC API Public
                                                                 .requestMatchers("/api/auth/**").permitAll()
                                                                 .requestMatchers("/api/payment/return").permitAll()
                                                                 .requestMatchers("/api/products/**").permitAll()
+                                                                .requestMatchers("/api/users/**").permitAll()
                                                                 .requestMatchers("/storage/**").permitAll()
+
+                                                                .requestMatchers(
+                                                                                "/v3/api-docs",
+                                                                                "/v3/api-docs/**",
+                                                                                "/swagger-resources",
+                                                                                "/swagger-resources/**",
+                                                                                "/configuration/ui",
+                                                                                "/configuration/security",
+                                                                                "/swagger-ui/**",
+                                                                                "/swagger-ui.html",
+                                                                                "/webjars/swagger-ui/**")
+                                                                .permitAll()
 
                                                                 .requestMatchers("/").permitAll()
                                                                 .anyRequest().authenticated())

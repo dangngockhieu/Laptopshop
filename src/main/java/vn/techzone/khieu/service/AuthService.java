@@ -10,19 +10,26 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
+import vn.techzone.khieu.dto.request.user.LoginDTO;
 import vn.techzone.khieu.dto.request.user.RegisterUserDTO;
 import vn.techzone.khieu.dto.request.user.ResetPasswordDTO;
+import vn.techzone.khieu.dto.response.user.ResLoginDTO;
 import vn.techzone.khieu.entity.User;
 import vn.techzone.khieu.mapper.UserMapper;
 import vn.techzone.khieu.repository.UserRepository;
+import vn.techzone.khieu.service.user.UserPrincipal;
 import vn.techzone.khieu.utils.SecurityUtil;
 import vn.techzone.khieu.utils.error.FailRequestException;
 import vn.techzone.khieu.utils.error.NotFindException;
+import org.springframework.security.core.Authentication;
 
 @Service
 @RequiredArgsConstructor
@@ -32,11 +39,49 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
     private final UserMapper userMapper;
+    private final AuthenticationManager authenticationManager;
+    private final SecurityUtil securityUtil;
 
     @Value("${verify-base-url}")
     private String verifyUrl;
 
     // AuthController
+
+    public record LoginResult(ResLoginDTO resLoginDTO, String refreshToken) {}
+
+    public LoginResult processLogin(LoginDTO loginDTO) {
+        // Nạp input gồm email/password vào Security
+        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
+                loginDTO.getEmail(), loginDTO.getPassword());
+
+        // xác thực người dùng => cần viết hàm loadUserByUsername
+        Authentication authentication = authenticationManager.authenticate(authenticationToken);
+
+        // Lưu thông tin người dùng đã xác thực vào Security Context
+        // req.user
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
+        ResLoginDTO.UserInfo userInfo = new ResLoginDTO.UserInfo(
+                principal.getId(),
+                principal.getName(),
+                principal.getEmail(),
+                principal.getRole());
+
+        ResLoginDTO res = new ResLoginDTO();
+        res.setUser(userInfo);
+
+        // Create a Token
+        String accessToken = this.securityUtil.createAccessToken(loginDTO.getEmail(), res.getUser());
+        res.setAccessToken(accessToken);
+
+        String refreshToken = this.securityUtil.createRefreshToken(loginDTO.getEmail(), res);
+        this.updateUserToken(loginDTO.getEmail(), refreshToken);
+
+        // TRẢ VỀ RECORD
+        return new LoginResult(res, refreshToken);
+    }
+
     public Optional<User> findByEmailAndRefreshToken(String email, String refreshToken) {
         String hashed = SecurityUtil.hashWithSHA256(refreshToken);
         return this.userRepository.findByEmailAndRefreshToken(email, hashed);

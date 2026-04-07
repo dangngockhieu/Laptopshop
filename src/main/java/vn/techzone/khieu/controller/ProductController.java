@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import vn.techzone.khieu.dto.request.product.CreateProductDTO;
@@ -48,13 +50,15 @@ import vn.techzone.khieu.utils.error.StorageException;
 @RestController
 @RequestMapping("/api/products")
 @RequiredArgsConstructor
+@Tag(name = "2. Sản phẩm (Product)", description = "Quản lý sản phẩm, danh mục, upload ảnh và excel")
 public class ProductController {
     private final ProductService productService;
     private final ProductExcelService productExcelService;
     private final ReviewService reviewService;
     private final ProductImageService productImageService;
 
-    @PostMapping(value = "/admin", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
     @ApiMessage("Tạo mới sản phẩm")
     public ResponseEntity<Product> createProduct(
             @RequestPart("data") @Valid CreateProductDTO dto,
@@ -64,7 +68,8 @@ public class ProductController {
         return ResponseEntity.ok(product);
     }
 
-    @PostMapping("/admin/upload-excel")
+    @PostMapping("/upload-excel")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ResStringDTO> uploadExcel(@RequestParam("excel") MultipartFile file) {
         // Kiểm tra file trống
         if (file.isEmpty()) {
@@ -90,7 +95,8 @@ public class ProductController {
         }
     }
 
-    @GetMapping("/admin/products-paginate")
+    @GetMapping("/products-paginate")
+    @PreAuthorize("hasRole('ADMIN')")
     @ApiMessage("Lấy danh sách sản phẩm")
     public ResponseEntity<PageResponseDTO<ResProductDTO>> getAllProducts(
             @RequestParam(value = "current", defaultValue = "1") int current,
@@ -104,13 +110,15 @@ public class ProductController {
         return ResponseEntity.ok(products);
     }
 
-    @GetMapping("/admin/top-products")
+    @GetMapping("/top-products")
+    @PreAuthorize("hasRole('ADMIN')")
     @ApiMessage("Lấy danh sách sản phẩm bán chạy")
     public ResponseEntity<List<ResBestSeller>> getTopProducts() {
         return ResponseEntity.ok(this.productService.getTopProducts());
     }
 
-    @GetMapping("/admin/count")
+    @GetMapping("/count")
+    @PreAuthorize("hasRole('ADMIN')")
     @ApiMessage("Đếm số lượng sản phẩm có trong kho")
     public ResponseEntity<Long> countProducts() {
         Long count = this.productService.countProducts();
@@ -135,7 +143,8 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/user/reviews")
+    @PostMapping("/reviews")
+    @PreAuthorize("hasRole('ADMIN', 'USER')")
     @ApiMessage("Tạo đánh giá cho sản phẩm")
     public ResponseEntity<ResStringDTO> createReview(@Valid @RequestBody CreateReviewDTO createReviewDTO) {
         Long userId = SecurityUtil.getCurrentUserId();
@@ -143,15 +152,17 @@ public class ProductController {
         return ResponseEntity.ok(new ResStringDTO("Đánh giá đã được tạo thành công"));
     }
 
-    @DeleteMapping("/admin/{id}")
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @ApiMessage("Xóa sản phẩm")
     public ResponseEntity<ResStringDTO> deleteProduct(@PathVariable Long id) {
         productService.deleteProduct(id);
         return ResponseEntity.ok(new ResStringDTO("Sản phẩm đã được xóa thành công"));
     }
 
-    @PostMapping(value = "/admin/product-images/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/product-images/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ApiMessage("Thêm ảnh sản phẩm")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ResStringDTO> addProductImages(
             @PathVariable Long id,
             @RequestPart("images") List<MultipartFile> images)
@@ -160,7 +171,8 @@ public class ProductController {
         return ResponseEntity.ok().body(new ResStringDTO("Ảnh sản phẩm đã được thêm thành công"));
     }
 
-    @DeleteMapping("/admin/product-image/{imageId}")
+    @DeleteMapping("/product-image/{imageId}")
+    @PreAuthorize("hasRole('ADMIN')")
     @ApiMessage("Xóa ảnh sản phẩm")
     public ResponseEntity<ResStringDTO> deleteProductImage(@PathVariable Long imageId)
             throws StorageException, URISyntaxException {
@@ -169,7 +181,8 @@ public class ProductController {
     }
 
     // Add features to product
-    @PostMapping("/admin/{productId}/features")
+    @PostMapping("/{productId}/features")
+    @PreAuthorize("hasRole('ADMIN')")
     @ApiMessage("Thêm tính năng cho sản phẩm")
     public ResponseEntity<ResStringDTO> addFeaturesToProduct(
             @PathVariable Long productId,
@@ -178,7 +191,8 @@ public class ProductController {
         return ResponseEntity.ok(new ResStringDTO("Tính năng đã được thêm vào sản phẩm thành công"));
     }
 
-    @DeleteMapping("/admin/{productId}/features/{featureId}")
+    @DeleteMapping("/{productId}/features/{featureId}")
+    @PreAuthorize("hasRole('ADMIN')")
     @ApiMessage("Xóa tính năng khỏi sản phẩm")
     public ResponseEntity<ResStringDTO> deleteFeatureFromProduct(
             @PathVariable Long productId,
@@ -188,7 +202,8 @@ public class ProductController {
     }
 
     ////////////////////////////////////////////////////////////////////////////////////
-    @PatchMapping("/admin/{id}")
+    @PatchMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @ApiMessage("Cập nhật thông tin sản phẩm")
     public ResponseEntity<ResProductDTO> updateProduct(@Valid @RequestBody UpdateProductDTO updateProductDTO,
             @PathVariable Long id) {

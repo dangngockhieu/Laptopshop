@@ -10,10 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,19 +32,19 @@ import vn.techzone.khieu.dto.response.user.ResStringDTO;
 import vn.techzone.khieu.entity.User;
 import vn.techzone.khieu.service.AuthService;
 import vn.techzone.khieu.service.UserService;
-import vn.techzone.khieu.service.user.UserPrincipal;
 import vn.techzone.khieu.utils.SecurityUtil;
 import vn.techzone.khieu.utils.annotation.ApiMessage;
 import vn.techzone.khieu.utils.annotation.RateLimit;
 import vn.techzone.khieu.utils.error.NotFindException;
 import vn.techzone.khieu.utils.error.UnauthorizedException;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
+@Tag(name = "1. Xác thực (Auth)", description = "Quản lý đăng nhập, đăng ký và Refresh Token")
 public class AuthController {
         private final UserService userService;
-        private final AuthenticationManagerBuilder authenticationManagerBuilder;
         private final SecurityUtil securityUtil;
         private final AuthService authService;
 
@@ -58,44 +55,22 @@ public class AuthController {
         @RateLimit(capacity = 3, minutes = 1)
         @ApiMessage("Đăng nhập")
         public ResponseEntity<ResLoginDTO> login(@Valid @RequestBody LoginDTO loginDTO) {
-                // Nạp input gồm email/password vào Security
-                UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
-                                loginDTO.getEmail(), loginDTO.getPassword());
-                // xác thực người dùng => cần viết hàm loadUserByUsername
-                Authentication authentication = authenticationManagerBuilder.getObject()
-                                .authenticate(authenticationToken);
-                // Lưu thông tin người dùng đã xác thực vào Security Context
-                // req.user
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-                // Create a Token
-                UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
-                ResLoginDTO.UserInfo userInfo = new ResLoginDTO.UserInfo(
-                                principal.getId(),
-                                principal.getName(),
-                                principal.getEmail(),
-                                principal.getRole());
-                ResLoginDTO res = new ResLoginDTO();
-                res.setUser(userInfo);
+                AuthService.LoginResult result = authService.processLogin(loginDTO);
 
-                String accessToken = this.securityUtil.createAccessToken(loginDTO.getEmail(), res.getUser());
-                res.setAccessToken(accessToken);
-
-                String refreshToken = this.securityUtil.createRefreshToken(loginDTO.getEmail(), res);
-                this.authService.updateUserToken(loginDTO.getEmail(), refreshToken);
-
-                ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", refreshToken)
+                ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", result.refreshToken())
                                 .httpOnly(true)
-                                // .secure(true)
                                 .path("/")
                                 .maxAge(refreshTokenExpired)
                                 .sameSite("Strict")
                                 .build();
+
                 return ResponseEntity.ok()
                                 .header(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString())
-                                .body(res);
+                                .body(result.resLoginDTO());
         }
 
-        @GetMapping("/user/account")
+        @GetMapping("/account")
+        @PreAuthorize("hasRole('ADMIN', 'USER')")
         @ApiMessage("Thông tin tài khoản")
         public ResponseEntity<ResLoginDTO.UserInfo> getAccount() {
                 String email = SecurityUtil.getCurrentUserLogin().orElse(null);
@@ -154,7 +129,8 @@ public class AuthController {
                                 .body(res);
         }
 
-        @PostMapping("/user/logout")
+        @PostMapping("/logout")
+        @PreAuthorize("hasRole('ADMIN', 'USER')")
         @RateLimit(capacity = 3, minutes = 1)
         @ApiMessage("Logout")
         public ResponseEntity<Void> handleLogout() {

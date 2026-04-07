@@ -9,7 +9,10 @@ import vn.techzone.khieu.utils.annotation.ApiMessage;
 import vn.techzone.khieu.utils.annotation.RateLimit;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import java.io.IOException;
 import java.util.Map;
@@ -17,10 +20,12 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/payments")
 @RequiredArgsConstructor
+@Tag(name = "5. Thanh toán (Payment)", description = "Tạo URL thanh toán VNPay và kiểm tra trạng thái giao dịch")
 public class PaymentController {
     private final PaymentService paymentService;
 
-    @PostMapping("/user/create")
+    @PostMapping("/create")
+    @PreAuthorize("hasRole('ADMIN', 'USER')")
     @RateLimit(capacity = 1, minutes = 3)
     @ApiMessage("Tạo URL thanh toán thành công")
     public ResponseEntity<Map<String, String>> createPayment(
@@ -41,7 +46,8 @@ public class PaymentController {
         return ResponseEntity.ok(Map.of("paymentUrl", paymentUrl));
     }
 
-    @GetMapping("/user/status")
+    @GetMapping("/status")
+    @PreAuthorize("hasRole('ADMIN', 'USER')")
     @ApiMessage("Lấy trạng thái thanh toán thành công")
     public ResponseEntity<?> checkStatus(@RequestParam Long orderID) {
         Long userId = SecurityUtil.getCurrentUserId();
